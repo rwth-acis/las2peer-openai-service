@@ -23,7 +23,7 @@ Start a las2peer network as usual with the Social-Bot-Manager service at the def
 Gradle build the las2peer-openai-service and add your IP Address to the bootstrap flag -b YOUR_IP_ADDRESS:9011 in /bin/start_network.sh
 
 ```bash
-./bin/start_network.sh
+java -cp "lib/*" --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED i5.las2peer.tools.L2pNodeLauncher --port 9012 -b YOUR_IP_ADDRESS:9011 --service-directory service uploadStartupDirectory startService\(\'i5.las2peer.services.openAIService.OpenAIService@1.0.0\'\) startWebConnector interactive
 ```
 
 
