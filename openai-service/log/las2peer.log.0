@@ -1,0 +1,102 @@
+2023 Jul 18 00:16:14 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	CONFIGURED	
+2023 Jul 18 00:16:14 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	RUNNING	
+2023 Jul 18 00:16:15 FINER i5.las2peer.p2p.LocalNode: AGENT_REGISTERED (3000)	-5861605419072435315 (java.lang.Long)	a412f77e658ab09c607ce89f0c2be4f228ff5db15d28cef239da377f0d94368b2b29d9dbcf6d8a88e6a0ea30efc49a8d5e1d4d9ade8be129331192dffda1be18	-	-	ServiceAgent	
+2023 Jul 18 00:16:17 FINER i5.las2peer.p2p.LocalNode: SERVICE_ADD_TO_MONITORING (7300)	-5861605419072435315 (java.lang.Long)	a412f77e658ab09c607ce89f0c2be4f228ff5db15d28cef239da377f0d94368b2b29d9dbcf6d8a88e6a0ea30efc49a8d5e1d4d9ade8be129331192dffda1be18	-	-	{"serviceName":"i5.las2peer.services.openAIService.OpenAIService@1.0.0","serviceAlias":"openai"}	
+2023 Jul 18 00:16:17 FINER i5.las2peer.p2p.LocalNode: SERVICE_STARTUP (7000)	-5861605419072435315 (java.lang.Long)	a412f77e658ab09c607ce89f0c2be4f228ff5db15d28cef239da377f0d94368b2b29d9dbcf6d8a88e6a0ea30efc49a8d5e1d4d9ade8be129331192dffda1be18	-	-	i5.las2peer.services.openAIService.OpenAIService@1.0.0	
+2023 Jul 18 00:16:17 SEVERE i5.las2peer.connectors.webConnector.WebConnector: Could not retrieve a valid OIDC provider config from https://api.learning-layers.eu/o/oauth2!
+2023 Jul 18 00:16:18 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	-5861605419072435315 (java.lang.Long)	-	-	-	WebConnector: Web-Connector in HTTP mode running at http://localhost:59026	
+2023 Jul 18 00:16:18 INFO i5.las2peer.connectors.webConnector.util.AuthenticationManager: attempting login with id: 86109d17e62c60cf01fa1e4e968e8cdc69219d59a04587648f253d71d49a3af51eea113ac37be9501cb196126b56d24de638e0d3f3c8cf1991aab89e215a3cb9
+2023 Jul 18 00:16:18 FINE i5.las2peer.connectors.webConnector.util.AuthenticationManager: Unlock the agent
+2023 Jul 18 00:16:18 FINE i5.las2peer.connectors.webConnector.util.AuthenticationManager: Passphrase accepted. Agent unlocked
+2023 Jul 18 00:16:18 FINE i5.las2peer.connectors.webConnector.util.AuthenticationManager: Store the agent only in the registry
+2023 Jul 18 00:16:18 SEVERE i5.las2peer.connectors.webConnector.WebConnector: not found: Could not resolve /template/get to a service name.
+javax.ws.rs.NotFoundException: Could not resolve /template/get to a service name.
+	at i5.las2peer.connectors.webConnector.WebConnectorRequestHandler.resolveServiceAndInvoke(WebConnectorRequestHandler.java:194)
+	at i5.las2peer.connectors.webConnector.WebConnectorRequestHandler.handle(WebConnectorRequestHandler.java:154)
+	at i5.las2peer.connectors.webConnector.WebConnectorRequestHandler.handleGET(WebConnectorRequestHandler.java:119)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory.lambda$static$0(ResourceMethodInvocationHandlerFactory.java:52)
+	at org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher$1.run(AbstractJavaResourceMethodDispatcher.java:124)
+	at org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.invoke(AbstractJavaResourceMethodDispatcher.java:167)
+	at org.glassfish.jersey.server.model.internal.JavaResourceMethodDispatcherProvider$ResponseOutInvoker.doDispatch(JavaResourceMethodDispatcherProvider.java:176)
+	at org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.dispatch(AbstractJavaResourceMethodDispatcher.java:79)
+	at org.glassfish.jersey.server.model.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:475)
+	at org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:397)
+	at org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:81)
+	at org.glassfish.jersey.server.ServerRuntime$1.run(ServerRuntime.java:255)
+	at org.glassfish.jersey.internal.Errors$1.call(Errors.java:248)
+	at org.glassfish.jersey.internal.Errors$1.call(Errors.java:244)
+	at org.glassfish.jersey.internal.Errors.process(Errors.java:292)
+	at org.glassfish.jersey.internal.Errors.process(Errors.java:274)
+	at org.glassfish.jersey.internal.Errors.process(Errors.java:244)
+	at org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:265)
+	at org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:234)
+	at org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:684)
+	at org.glassfish.jersey.jdkhttp.JdkHttpHandlerContainer.handle(JdkHttpHandlerContainer.java:135)
+	at jdk.httpserver/com.sun.net.httpserver.Filter$Chain.doFilter(Filter.java:95)
+	at jdk.httpserver/sun.net.httpserver.AuthFilter.doFilter(AuthFilter.java:82)
+	at jdk.httpserver/com.sun.net.httpserver.Filter$Chain.doFilter(Filter.java:98)
+	at jdk.httpserver/sun.net.httpserver.ServerImpl$Exchange$LinkHandler.handle(ServerImpl.java:851)
+	at jdk.httpserver/com.sun.net.httpserver.Filter$Chain.doFilter(Filter.java:95)
+	at jdk.httpserver/sun.net.httpserver.ServerImpl$Exchange.run(ServerImpl.java:818)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023 Jul 18 00:16:18 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_ERROR (-9100)	-5861605419072435315 (java.lang.Long)	-	-	-	WebConnector: not found: Could not resolve /template/get to a service name.	
+2023 Jul 18 00:16:19 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	-5861605419072435315 (java.lang.Long)	-	-	-	WebConnector: Web-Connector has been stopped	
+2023 Jul 18 00:16:19 FINER i5.las2peer.p2p.LocalNode: SERVICE_SHUTDOWN (7100)	-5861605419072435315 (java.lang.Long)	a412f77e658ab09c607ce89f0c2be4f228ff5db15d28cef239da377f0d94368b2b29d9dbcf6d8a88e6a0ea30efc49a8d5e1d4d9ade8be129331192dffda1be18	-	-	i5.las2peer.services.openAIService.OpenAIService@1.0.0	
+2023 Jul 18 00:16:19 FINER i5.las2peer.p2p.LocalNode: NODE_SHUTDOWN (200)	-5861605419072435315 (java.lang.Long)	-	-	-	-	
+2023 Jul 18 00:16:19 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	CONFIGURED	
+2023 Jul 18 00:16:19 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	RUNNING	
+2023 Jul 18 00:16:19 FINER i5.las2peer.p2p.LocalNode: AGENT_REGISTERED (3000)	-4532284226129072380 (java.lang.Long)	23b6fc4e55e06425cd631b3dc22fa0b5c6aa7ffd1418d051d3f6ca338afbe8487a5ab1a9c694147ff8ba17a9aef412b7be49c41b9cd194d054c4c955001dfcde	-	-	ServiceAgent	
+2023 Jul 18 00:16:19 FINER i5.las2peer.p2p.LocalNode: SERVICE_ADD_TO_MONITORING (7300)	-4532284226129072380 (java.lang.Long)	23b6fc4e55e06425cd631b3dc22fa0b5c6aa7ffd1418d051d3f6ca338afbe8487a5ab1a9c694147ff8ba17a9aef412b7be49c41b9cd194d054c4c955001dfcde	-	-	{"serviceName":"i5.las2peer.services.openAIService.OpenAIService@1.0.0","serviceAlias":"openai"}	
+2023 Jul 18 00:16:19 FINER i5.las2peer.p2p.LocalNode: SERVICE_STARTUP (7000)	-4532284226129072380 (java.lang.Long)	23b6fc4e55e06425cd631b3dc22fa0b5c6aa7ffd1418d051d3f6ca338afbe8487a5ab1a9c694147ff8ba17a9aef412b7be49c41b9cd194d054c4c955001dfcde	-	-	i5.las2peer.services.openAIService.OpenAIService@1.0.0	
+2023 Jul 18 00:16:19 SEVERE i5.las2peer.connectors.webConnector.WebConnector: Could not retrieve a valid OIDC provider config from https://api.learning-layers.eu/o/oauth2!
+2023 Jul 18 00:16:20 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	-4532284226129072380 (java.lang.Long)	-	-	-	WebConnector: Web-Connector in HTTP mode running at http://localhost:59029	
+2023 Jul 18 00:16:20 INFO i5.las2peer.connectors.webConnector.util.AuthenticationManager: attempting login with id: 86109d17e62c60cf01fa1e4e968e8cdc69219d59a04587648f253d71d49a3af51eea113ac37be9501cb196126b56d24de638e0d3f3c8cf1991aab89e215a3cb9
+2023 Jul 18 00:16:20 FINE i5.las2peer.connectors.webConnector.util.AuthenticationManager: Unlock the agent
+2023 Jul 18 00:16:20 FINE i5.las2peer.connectors.webConnector.util.AuthenticationManager: Passphrase accepted. Agent unlocked
+2023 Jul 18 00:16:20 FINE i5.las2peer.connectors.webConnector.util.AuthenticationManager: Store the agent only in the registry
+2023 Jul 18 00:16:20 SEVERE i5.las2peer.connectors.webConnector.WebConnector: not found: Could not resolve /template/post/testInput to a service name.
+javax.ws.rs.NotFoundException: Could not resolve /template/post/testInput to a service name.
+	at i5.las2peer.connectors.webConnector.WebConnectorRequestHandler.resolveServiceAndInvoke(WebConnectorRequestHandler.java:194)
+	at i5.las2peer.connectors.webConnector.WebConnectorRequestHandler.handle(WebConnectorRequestHandler.java:154)
+	at i5.las2peer.connectors.webConnector.WebConnectorRequestHandler.handlePOST(WebConnectorRequestHandler.java:126)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory.lambda$static$0(ResourceMethodInvocationHandlerFactory.java:52)
+	at org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher$1.run(AbstractJavaResourceMethodDispatcher.java:124)
+	at org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.invoke(AbstractJavaResourceMethodDispatcher.java:167)
+	at org.glassfish.jersey.server.model.internal.JavaResourceMethodDispatcherProvider$ResponseOutInvoker.doDispatch(JavaResourceMethodDispatcherProvider.java:176)
+	at org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.dispatch(AbstractJavaResourceMethodDispatcher.java:79)
+	at org.glassfish.jersey.server.model.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:475)
+	at org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:397)
+	at org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:81)
+	at org.glassfish.jersey.server.ServerRuntime$1.run(ServerRuntime.java:255)
+	at org.glassfish.jersey.internal.Errors$1.call(Errors.java:248)
+	at org.glassfish.jersey.internal.Errors$1.call(Errors.java:244)
+	at org.glassfish.jersey.internal.Errors.process(Errors.java:292)
+	at org.glassfish.jersey.internal.Errors.process(Errors.java:274)
+	at org.glassfish.jersey.internal.Errors.process(Errors.java:244)
+	at org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:265)
+	at org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:234)
+	at org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:684)
+	at org.glassfish.jersey.jdkhttp.JdkHttpHandlerContainer.handle(JdkHttpHandlerContainer.java:135)
+	at jdk.httpserver/com.sun.net.httpserver.Filter$Chain.doFilter(Filter.java:95)
+	at jdk.httpserver/sun.net.httpserver.AuthFilter.doFilter(AuthFilter.java:82)
+	at jdk.httpserver/com.sun.net.httpserver.Filter$Chain.doFilter(Filter.java:98)
+	at jdk.httpserver/sun.net.httpserver.ServerImpl$Exchange$LinkHandler.handle(ServerImpl.java:851)
+	at jdk.httpserver/com.sun.net.httpserver.Filter$Chain.doFilter(Filter.java:95)
+	at jdk.httpserver/sun.net.httpserver.ServerImpl$Exchange.run(ServerImpl.java:818)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023 Jul 18 00:16:20 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_ERROR (-9100)	-4532284226129072380 (java.lang.Long)	-	-	-	WebConnector: not found: Could not resolve /template/post/testInput to a service name.	
+2023 Jul 18 00:16:20 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	-4532284226129072380 (java.lang.Long)	-	-	-	WebConnector: Web-Connector has been stopped	
+2023 Jul 18 00:16:20 FINER i5.las2peer.p2p.LocalNode: SERVICE_SHUTDOWN (7100)	-4532284226129072380 (java.lang.Long)	23b6fc4e55e06425cd631b3dc22fa0b5c6aa7ffd1418d051d3f6ca338afbe8487a5ab1a9c694147ff8ba17a9aef412b7be49c41b9cd194d054c4c955001dfcde	-	-	i5.las2peer.services.openAIService.OpenAIService@1.0.0	
+2023 Jul 18 00:16:20 FINER i5.las2peer.p2p.LocalNode: NODE_SHUTDOWN (200)	-4532284226129072380 (java.lang.Long)	-	-	-	-	
