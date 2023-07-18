@@ -15,6 +15,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -42,7 +44,6 @@ import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.api.Context;
 import i5.las2peer.api.ManualDeployment;
-import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.api.security.UserAgent;
 import i5.las2peer.logging.L2pLogger;
@@ -113,10 +114,11 @@ public class OpenAIService extends RESTService {
 		JSONObject jsonBody = null;
 		JSONObject openaiBody = new JSONObject();
 		JSONObject chatResponse = new JSONObject();
-		HashMap<String, String> headers = new HashMap<String, String>();
 		
 		try {
 			jsonBody = (JSONObject) parser.parse(body);
+			// Get the model 
+			String model = jsonBody.getAsString("model");
 			// Get the system messages json array from the body, specified in the bot model
 			JSONArray messagesJsonArray = (JSONArray) jsonBody.get("messages");
 			// Get the conversation history from the body
@@ -127,26 +129,52 @@ public class OpenAIService extends RESTService {
 			client.setConnectorEndpoint(url);
 
 			String openai_api_key = System.getenv("OPENAI_API_KEY");
-			headers.put("Authorization", "Bearer " + openai_api_key);
 			
 			// TODO: Prepare openaiBody 
+			//messagesJsonArray already formatted as [{"role":"system", "content":"You are a helpful assistant"}]
+			//conversationPathJsonArray formatted as [{"role":"user", "content":"Hi"}, {"role":"assistant","content":"Hi, how are you doing?"}]
+			// Append the conversationPathJsonArray to messagesJsonArray, replace the role of the last assistant message with "example_assistant"
+			if (conversationPathJsonArray != null) {
+				messagesJsonArray.addAll(conversationPathJsonArray);
+			}
+			openaiBody.put("model", model);
+			openaiBody.put("messages", messagesJsonArray);
 			
-			ClientResponse r = client.sendRequest("POST", url,
-					openaiBody.toJSONString(), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
+            HttpClient httpClient = HttpClient.newHttpClient();
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(UriBuilder.fromUri(url).build())
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", "Bearer " + openai_api_key)
+                    .POST(HttpRequest.BodyPublishers.ofString(openaiBody.toJSONString()))
+                    .build();
 
-			JSONObject response = (JSONObject) parser.parse(r.getResponse());
-			JSONArray choices = (JSONArray) response.get("choices");
-			// System.out.println(choices);
-			JSONObject choicesObj = (JSONObject) choices.get(0);
-			JSONObject message = (JSONObject) choicesObj.get("message");
-			// System.out.println(message);
-			String textResponse = message.getAsString("content");
-			// System.out.println(textResponse);
-			chatResponse.put("text", textResponse);
-		} catch (ParseException e) {
-			e.printStackTrace();
-			chatResponse.appendField("text", "An error has occurred.");
-		}
+            // Send the request
+            HttpResponse<String> httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            int responseCode = httpResponse.statusCode();
+
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                // Update chatResponse with the result from the POST request
+            	JSONObject response = (JSONObject) parser.parse(httpResponse.body());
+            	String textResponse = "";
+    			JSONArray choices = (JSONArray) response.get("choices");
+    			if (choices == null) {
+    				textResponse = response.toString();
+    			} else {
+    				// System.out.println(choices);
+    				JSONObject choicesObj = (JSONObject) choices.get(0);
+    				JSONObject message = (JSONObject) choicesObj.get("message");
+    				// System.out.println(message);
+    				textResponse = message.getAsString("content");
+    				// System.out.println(textResponse);
+    			}
+    			chatResponse.put("text", textResponse);
+            } else {
+                chatResponse.appendField("text", "An error has occurred.");
+            }
+        } catch (ParseException | IOException | InterruptedException e) {
+            e.printStackTrace();
+            chatResponse.appendField("text", "An error has occurred.");
+        }
 		return Response.ok().entity(chatResponse).build();
 	}
 }
