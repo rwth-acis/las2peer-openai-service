@@ -109,8 +109,44 @@ public class OpenAIService extends RESTService {
 			value = "personalize",
 			notes = "Method that returns a response generated from openAI")
 	public Response personalize(String body) {
-		String returnString = "";
-		returnString += "Input " + body;
-		return Response.ok().entity(returnString).build();
+		JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+		JSONObject jsonBody = null;
+		JSONObject openaiBody = new JSONObject();
+		JSONObject chatResponse = new JSONObject();
+		HashMap<String, String> headers = new HashMap<String, String>();
+		
+		try {
+			jsonBody = (JSONObject) parser.parse(body);
+			// Get the system messages json array from the body, specified in the bot model
+			JSONArray messagesJsonArray = (JSONArray) jsonBody.get("messages");
+			// Get the conversation history from the body
+			JSONArray conversationPathJsonArray = (JSONArray) jsonBody.get("conversationPath");
+				
+			String url = "https://api.openai.com/v1/chat/completions";
+			MiniClient client = new MiniClient();
+			client.setConnectorEndpoint(url);
+
+			String openai_api_key = System.getenv("OPENAI_API_KEY");
+			headers.put("Authorization", "Bearer " + openai_api_key);
+			
+			// TODO: Prepare openaiBody 
+			
+			ClientResponse r = client.sendRequest("POST", url,
+					openaiBody.toJSONString(), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
+
+			JSONObject response = (JSONObject) parser.parse(r.getResponse());
+			JSONArray choices = (JSONArray) response.get("choices");
+			// System.out.println(choices);
+			JSONObject choicesObj = (JSONObject) choices.get(0);
+			JSONObject message = (JSONObject) choicesObj.get("message");
+			// System.out.println(message);
+			String textResponse = message.getAsString("content");
+			// System.out.println(textResponse);
+			chatResponse.put("text", textResponse);
+		} catch (ParseException e) {
+			e.printStackTrace();
+			chatResponse.appendField("text", "An error has occurred.");
+		}
+		return Response.ok().entity(chatResponse).build();
 	}
 }
