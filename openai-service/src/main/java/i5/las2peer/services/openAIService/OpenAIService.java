@@ -20,7 +20,10 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 import org.apache.commons.io.IOUtils;
 import javax.imageio.ImageIO;
@@ -65,6 +68,7 @@ import net.minidev.json.parser.ParseException;
 import net.minidev.json.JSONValue;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+
 
 // TODO Describe your own service
 /**
@@ -135,10 +139,32 @@ public class OpenAIService extends RESTService {
 			//conversationPathJsonArray formatted as [{"role":"user", "content":"Hi"}, {"role":"assistant","content":"Hi, how are you doing?"}]
 			// Append the conversationPathJsonArray to messagesJsonArray, replace the role of the last assistant message with "example_assistant"
 			if (conversationPathJsonArray != null) {
+				// get the last two messages in the conversation
+				// first should be the user prompt
+				// second should be the bot's response
+				// Add them as example responses to the messages array
+				// remove the bot's response from the conversation path array
+				JSONObject jsonUserMsgMap = (JSONObject) conversationPathJsonArray.get(conversationPathJsonArray.size()-2);
+				HashMap<String, String> userMsgMap = toMap(jsonUserMsgMap);
+				userMsgMap.put("role", "system");
+				userMsgMap.put("name", "example_user");
+				JSONObject newJsonUserMsgMap = new JSONObject(userMsgMap);
+				messagesJsonArray.add(newJsonUserMsgMap);				
+				
+				JSONObject jsonBotMsgMap = (JSONObject) conversationPathJsonArray.get(conversationPathJsonArray.size()-1);
+				HashMap<String, String> botMsgMap = toMap(jsonBotMsgMap);
+				botMsgMap.put("role", "system");
+				botMsgMap.put("name", "example_assistant");
+				JSONObject newJsonBotMsgMap = new JSONObject(botMsgMap);
+				messagesJsonArray.add(newJsonBotMsgMap);
+				
+				conversationPathJsonArray.remove(conversationPathJsonArray.size()-1);
 				messagesJsonArray.addAll(conversationPathJsonArray);
 			}
+			
 			openaiBody.put("model", model);
 			openaiBody.put("messages", messagesJsonArray);
+			System.out.println(messagesJsonArray);
 			
             HttpClient httpClient = HttpClient.newHttpClient();
             HttpRequest httpRequest = HttpRequest.newBuilder()
@@ -151,10 +177,10 @@ public class OpenAIService extends RESTService {
             // Send the request
             HttpResponse<String> httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             int responseCode = httpResponse.statusCode();
+            JSONObject response = (JSONObject) parser.parse(httpResponse.body());
 
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                // Update chatResponse with the result from the POST request
-            	JSONObject response = (JSONObject) parser.parse(httpResponse.body());
+            	
             	String textResponse = "";
     			JSONArray choices = (JSONArray) response.get("choices");
     			if (choices == null) {
@@ -169,7 +195,7 @@ public class OpenAIService extends RESTService {
     			}
     			chatResponse.put("text", textResponse);
             } else {
-                chatResponse.appendField("text", "An error has occurred.");
+                chatResponse.put("text", response.toString());
             }
         } catch (ParseException | IOException | InterruptedException e) {
             e.printStackTrace();
@@ -177,4 +203,12 @@ public class OpenAIService extends RESTService {
         }
 		return Response.ok().entity(chatResponse).build();
 	}
+	
+	public static HashMap<String, String> toMap(JSONObject jsonobj) {
+        HashMap<String, String> map = new HashMap<String, String>();
+        for (String key : jsonobj.keySet()) {
+            String value = jsonobj.getAsString(key);
+            map.put(key, value);
+        }   return map;
+    }
 }
