@@ -140,25 +140,29 @@ public class OpenAIService extends RESTService {
 			// Append the conversationPathJsonArray to messagesJsonArray, replace the role of the last assistant message with "example_assistant"
 			if (conversationPathJsonArray != null) {
 				// get the last two messages in the conversation
-				// first should be the user prompt
-				// second should be the bot's response
+					// first should be the user prompt
+					// second should be the bot's response
+				// Remove the bot's response from the conversation path array
 				// Add them as example responses to the messages array
-				// remove the bot's response from the conversation path array
 				JSONObject jsonUserMsgMap = (JSONObject) conversationPathJsonArray.get(conversationPathJsonArray.size()-2);
 				HashMap<String, String> userMsgMap = toMap(jsonUserMsgMap);
 				userMsgMap.put("role", "system");
 				userMsgMap.put("name", "example_user");
-				JSONObject newJsonUserMsgMap = new JSONObject(userMsgMap);
-				messagesJsonArray.add(newJsonUserMsgMap);				
+				JSONObject newJsonUserMsgMap = new JSONObject(userMsgMap);			
 				
 				JSONObject jsonBotMsgMap = (JSONObject) conversationPathJsonArray.get(conversationPathJsonArray.size()-1);
 				HashMap<String, String> botMsgMap = toMap(jsonBotMsgMap);
 				botMsgMap.put("role", "system");
 				botMsgMap.put("name", "example_assistant");
 				JSONObject newJsonBotMsgMap = new JSONObject(botMsgMap);
-				messagesJsonArray.add(newJsonBotMsgMap);
-				
+				//Remove the bot's response from the conversaiton path array
 				conversationPathJsonArray.remove(conversationPathJsonArray.size()-1);
+				
+				//add the example messages befor ethe user prompt
+				conversationPathJsonArray.add(conversationPathJsonArray.size()-1, newJsonUserMsgMap);
+				conversationPathJsonArray.add(conversationPathJsonArray.size()-1, newJsonBotMsgMap);
+				
+				
 				messagesJsonArray.addAll(conversationPathJsonArray);
 			}
 			
@@ -191,6 +195,7 @@ public class OpenAIService extends RESTService {
     				JSONObject message = (JSONObject) choicesObj.get("message");
     				// System.out.println(message);
     				textResponse = message.getAsString("content");
+    				chatResponse.put("openai", "True");
     				// System.out.println(textResponse);
     			}
     			chatResponse.put("text", textResponse);
