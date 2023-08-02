@@ -29,6 +29,8 @@ dependencies {
     
     // Jackson (for JSON serialization/deserialization)
     //implementation "com.fasterxml.jackson.core:jackson-databind:2.14.2"
+    implementation 'com.knuddels:jtokkit:0.6.1'
+    implementation 'org.json:json:20171018'
 }
 
 configurations {

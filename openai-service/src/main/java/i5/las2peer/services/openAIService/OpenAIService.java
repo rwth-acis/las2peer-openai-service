@@ -43,6 +43,13 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.java_websocket.util.Base64;
 
+import com.knuddels.jtokkit.Encodings;
+import com.knuddels.jtokkit.api.Encoding;
+import com.knuddels.jtokkit.api.EncodingRegistry;
+import com.knuddels.jtokkit.api.EncodingType;
+
+import org.json.*;
+
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.api.Context;
@@ -97,6 +104,9 @@ import java.nio.charset.StandardCharsets;
 @ServicePath("/openai")
 // TODO Your own service class
 public class OpenAIService extends RESTService {
+	
+	EncodingRegistry registry = Encodings.newDefaultEncodingRegistry();
+	Encoding encoding = registry.getEncoding(EncodingType.CL100K_BASE);
 
 	/*
 	 * Template of a post function.
@@ -170,6 +180,20 @@ public class OpenAIService extends RESTService {
 			openaiBody.put("messages", messagesJsonArray);
 			System.out.println(messagesJsonArray);
 			
+			// Count tokens
+			List<ChatMessage> messages = new ArrayList<ChatMessage>();
+		    for (int i = 0 ; i < messagesJsonArray.size(); i++) {
+		        JSONObject jsonMsgMap = (JSONObject) messagesJsonArray.get(i);
+		        HashMap<String, String> msgMap = toMap(jsonMsgMap);
+		        String role = msgMap.get("role");
+		        String content = msgMap.get("content");
+		        String name = msgMap.get("name");
+		        ChatMessage chatMsg = new ChatMessage(role, content, name);
+		        messages.add(chatMsg);
+		    }
+			int tokens = countMessageTokens(registry, model, messages);
+			System.out.println("TOKENS TO BE USED: " + tokens);
+			
             HttpClient httpClient = HttpClient.newHttpClient();
             HttpRequest httpRequest = HttpRequest.newBuilder()
                     .uri(UriBuilder.fromUri(url).build())
@@ -216,4 +240,38 @@ public class OpenAIService extends RESTService {
             map.put(key, value);
         }   return map;
     }
+	
+	private int countMessageTokens(
+	        EncodingRegistry registry,
+	        String model,
+	        List<ChatMessage> messages // consists of role, content and an optional name
+	) {
+	    Encoding encoding = registry.getEncodingForModel(model).orElseThrow();
+	    int tokensPerMessage;
+	    int tokensPerName;
+	    if (model.startsWith("gpt-4")) {
+	        tokensPerMessage = 3;
+	        tokensPerName = 1;
+	    } else if (model.startsWith("gpt-3.5-turbo")) {
+	        tokensPerMessage = 4; // every message follows <|start|>{role/name}\n{content}<|end|>\n
+	        tokensPerName = -1; // if there's a name, the role is omitted
+	    } else {
+	        throw new IllegalArgumentException("Unsupported model: " + model);
+	    }
+
+	    int sum = 0;
+	    for (final var message : messages) {
+	        sum += tokensPerMessage;
+	        sum += encoding.countTokens(message.getContent());
+	        sum += encoding.countTokens(message.getRole());
+	        if (message.hasName()) {
+	            sum += encoding.countTokens(message.getName());
+	            sum += tokensPerName;
+	        }
+	    }
+
+	    sum += 3; // every reply is primed with <|start|>assistant<|message|>
+
+	    return sum;
+	}
 }
