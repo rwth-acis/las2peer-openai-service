@@ -107,6 +107,104 @@ public class OpenAIService extends RESTService {
 	
 	EncodingRegistry registry = Encodings.newDefaultEncodingRegistry();
 	Encoding encoding = registry.getEncoding(EncodingType.CL100K_BASE);
+	
+	/*
+	 * Template of a post function.
+	 * 
+	 * @return Returns the response generated from openAI
+	*/
+	@POST
+	@Path("/test")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiResponses(
+			value = { @ApiResponse(
+					code = HttpURLConnection.HTTP_OK,
+					message = "A test response from OpenAI") })
+	@ApiOperation(
+			value = "test",
+			notes = "Method that returns a response generated from openAI")
+	public Response test(String body) {
+		JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+		JSONObject jsonBody = null;
+		JSONObject openaiBody = new JSONObject();
+		JSONObject chatResponse = new JSONObject();
+		
+		try {
+			jsonBody = (JSONObject) parser.parse(body);
+			// Get the model 
+			String model = jsonBody.getAsString("model");
+			String prompt = "Who was the first president of the USA?";
+				
+			String url = "https://api.openai.com/v1/chat/completions";
+			MiniClient client = new MiniClient();
+			client.setConnectorEndpoint(url);
+
+			String openai_api_key = System.getenv("OPENAI_API_KEY");
+			
+			JSONArray messagesJsonArray = new JSONArray();
+			HashMap<String, String> userMsgMap = new HashMap<String,String>();
+			userMsgMap.put("role", "user");
+			userMsgMap.put("content", prompt);
+			JSONObject newJsonUserMsgMap = new JSONObject(userMsgMap);			
+				
+			messagesJsonArray.add(newJsonUserMsgMap);
+			
+			openaiBody.put("model", model);
+			openaiBody.put("messages", messagesJsonArray);
+			System.out.println(messagesJsonArray);
+			
+			// Count tokens
+			List<ChatMessage> messages = new ArrayList<ChatMessage>();
+		    for (int i = 0 ; i < messagesJsonArray.size(); i++) {
+		        JSONObject jsonMsgMap = (JSONObject) messagesJsonArray.get(i);
+		        HashMap<String, String> msgMap = toMap(jsonMsgMap);
+		        String role = msgMap.get("role");
+		        String content = msgMap.get("content");
+		        String name = msgMap.get("name");
+		        ChatMessage chatMsg = new ChatMessage(role, content, name);
+		        messages.add(chatMsg);
+		    }
+			int tokens = countMessageTokens(registry, model, messages);
+			System.out.println("TOKENS TO BE USED: " + tokens);
+			
+            HttpClient httpClient = HttpClient.newHttpClient();
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(UriBuilder.fromUri(url).build())
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", "Bearer " + openai_api_key)
+                    .POST(HttpRequest.BodyPublishers.ofString(openaiBody.toJSONString()))
+                    .build();
+
+            // Send the request
+            HttpResponse<String> httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            int responseCode = httpResponse.statusCode();
+            JSONObject response = (JSONObject) parser.parse(httpResponse.body());
+
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+            	
+            	String textResponse = "";
+    			JSONArray choices = (JSONArray) response.get("choices");
+    			if (choices == null) {
+    				textResponse = response.toString();
+    			} else {
+    				// System.out.println(choices);
+    				JSONObject choicesObj = (JSONObject) choices.get(0);
+    				JSONObject message = (JSONObject) choicesObj.get("message");
+    				// System.out.println(message);
+    				textResponse = message.getAsString("content");
+    				//chatResponse.put("openai", "True");
+    				// System.out.println(textResponse);
+    			}
+    			chatResponse.put("text", textResponse);
+            } else {
+                chatResponse.put("text", response.toString());
+            }
+        } catch (ParseException | IOException | InterruptedException e) {
+            e.printStackTrace();
+            chatResponse.appendField("text", "An error has occurred.");
+        }
+		return Response.ok().entity(chatResponse).build();
+	}
 
 	/*
 	 * Template of a post function.
