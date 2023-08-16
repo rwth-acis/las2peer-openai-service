@@ -195,6 +195,7 @@ public class OpenAIService extends RESTService {
     				//chatResponse.put("openai", "True");
     				// System.out.println(textResponse);
     			}
+				chatResponse.put("tokens", tokens);
     			chatResponse.put("text", textResponse);
             } else {
                 chatResponse.put("text", response.toString());
@@ -247,29 +248,56 @@ public class OpenAIService extends RESTService {
 			//conversationPathJsonArray formatted as [{"role":"user", "content":"Hi"}, {"role":"assistant","content":"Hi, how are you doing?"}]
 			// Append the conversationPathJsonArray to messagesJsonArray, replace the role of the last assistant message with "example_assistant"
 			if (conversationPathJsonArray != null) {
-				// get the last two messages in the conversation
-					// first should be the user prompt
-					// second should be the bot's response
-				// Remove the bot's response from the conversation path array
-				// Add them as example responses to the messages array
-				JSONObject jsonUserMsgMap = (JSONObject) conversationPathJsonArray.get(conversationPathJsonArray.size()-2);
+				
+				// Get the index of the last user message in the conversation
+				// Convert the message to a example user message 
+				// Then get all following messages, which we assume to be assistant messages
+				// Convert the message(s) to an example assistant message
+				// Remove the assistant messages from the conversation path array
+				// Add the example responses to the messages array befor ethe last user message
+				int lastUserMsgIdx = conversationPathJsonArray.size()-2;
+				
+				for (int i = 0, size = conversationPathJsonArray.size(); i < size; i++)
+			    {
+			      JSONObject jsonMsgMap = (JSONObject) conversationPathJsonArray.get(i);
+			      if (jsonMsgMap.getAsString("role").equals("user")) {
+			    	  lastUserMsgIdx = i;
+			      }
+			    }
+				
+				JSONObject jsonUserMsgMap = (JSONObject) conversationPathJsonArray.get(lastUserMsgIdx);
 				HashMap<String, String> userMsgMap = toMap(jsonUserMsgMap);
 				userMsgMap.put("role", "system");
 				userMsgMap.put("name", "example_user");
-				JSONObject newJsonUserMsgMap = new JSONObject(userMsgMap);			
+				JSONObject newJsonUserMsgMap = new JSONObject(userMsgMap);
 				
-				JSONObject jsonBotMsgMap = (JSONObject) conversationPathJsonArray.get(conversationPathJsonArray.size()-1);
-				HashMap<String, String> botMsgMap = toMap(jsonBotMsgMap);
-				botMsgMap.put("role", "system");
-				botMsgMap.put("name", "example_assistant");
-				JSONObject newJsonBotMsgMap = new JSONObject(botMsgMap);
-				//Remove the bot's response from the conversaiton path array
-				conversationPathJsonArray.remove(conversationPathJsonArray.size()-1);
+				JSONArray botMessagesJsonArray = new JSONArray();
+				JSONArray exampleBotMessagesJsonArray = new JSONArray();
+				for (int i = lastUserMsgIdx + 1, size = conversationPathJsonArray.size(); i < size; i++)
+			    {
+					JSONObject jsonBotMsgMap = (JSONObject) conversationPathJsonArray.get(i);
+					botMessagesJsonArray.add(jsonBotMsgMap);
+					HashMap<String, String> botMsgMap = toMap(jsonBotMsgMap);
+					botMsgMap.put("role", "system");
+					botMsgMap.put("name", "example_assistant");
+					JSONObject newJsonBotMsgMap = new JSONObject(botMsgMap);
+					exampleBotMessagesJsonArray.add(newJsonBotMsgMap);
+			    }
 				
-				//add the example messages befor ethe user prompt
-				conversationPathJsonArray.add(conversationPathJsonArray.size()-1, newJsonUserMsgMap);
-				conversationPathJsonArray.add(conversationPathJsonArray.size()-1, newJsonBotMsgMap);
+				//Remove the non example bot's response from the conversation path array
+				for (int i = 0, size = botMessagesJsonArray.size(); i < size; i++)
+			    {
+					JSONObject jsonBotMsgMap = (JSONObject) botMessagesJsonArray.get(i);
+					conversationPathJsonArray.remove(jsonBotMsgMap);
+			    }
 				
+				//Add the example messages before the user prompt
+				conversationPathJsonArray.add(lastUserMsgIdx, newJsonUserMsgMap);
+				for (int i = 0, size = exampleBotMessagesJsonArray.size(); i < size; i++)
+			    {
+			      JSONObject jsonMsgMap = (JSONObject) exampleBotMessagesJsonArray.get(i);
+			      conversationPathJsonArray.add(lastUserMsgIdx + 1 + i, jsonMsgMap);
+			    }
 				
 				messagesJsonArray.addAll(conversationPathJsonArray);
 			}
@@ -320,6 +348,7 @@ public class OpenAIService extends RESTService {
     				chatResponse.put("openai", "True");
     				// System.out.println(textResponse);
     			}
+				chatResponse.put("tokens", tokens);
     			chatResponse.put("text", textResponse);
             } else {
                 chatResponse.put("text", response.toString());
