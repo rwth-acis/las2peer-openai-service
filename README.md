@@ -28,7 +28,7 @@ java -cp ... --port 9012 -b YOUR_IP_ADDRESS:9011 --service-directory service upl
 
 
 
-The REST-API will be available via *http://localhost:8080/openapi* and the las2peer node is available via port 9011.
+The REST-API will be available via *http://localhost:8080/openai* and the las2peer node is available via port 9011.
 
 ## Bot Functions
 
