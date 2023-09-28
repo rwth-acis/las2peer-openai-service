@@ -49,6 +49,7 @@ import com.knuddels.jtokkit.api.EncodingRegistry;
 import com.knuddels.jtokkit.api.EncodingType;
 
 import org.json.*;
+import org.web3j.abi.datatypes.Int;
 
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
@@ -67,6 +68,7 @@ import io.swagger.annotations.Contact;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.License;
 import io.swagger.annotations.SwaggerDefinition;
+import io.swagger.util.Json;
 import kotlin.contracts.Returns;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
@@ -360,6 +362,98 @@ public class OpenAIService extends RESTService {
 		return Response.ok().entity(chatResponse).build();
 	}
 	
+
+	@POST
+	@Path("/chat")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiResponses(
+			value = { @ApiResponse(
+					code = HttpURLConnection.HTTP_OK,
+					message = "Handling default messages from the Bot Model") })
+	@ApiOperation(
+			value = "chat",
+			notes = "Returns a response by OpenAI and classifies the intent")
+	public Response chat(String body) {
+		JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+		JSONObject jsonBody = null;
+		JSONObject openaiBody = new JSONObject();
+		JSONObject chatResponse = new JSONObject();
+		JSONObject costs = new JSONObject();
+		
+		try {
+			jsonBody = (JSONObject) parser.parse(body);
+			String model = jsonBody.getAsString("model");
+			String openaiKey = jsonBody.getAsString("openaiKey");
+			String systemMessage = jsonBody.getAsString("systemMessage");
+			System.out.println(systemMessage);
+			String userMessage = jsonBody.getAsString("msg");
+			System.out.println(userMessage);
+			JSONArray messagesJsonArray = new JSONArray();
+			JSONObject system = new JSONObject();
+			JSONObject user = new JSONObject();
+
+			//setup message array for the openai request
+			if (systemMessage != null) {
+				system.put("role", "system");
+				system.put("content", systemMessage); 
+				user.put("role", "user");
+				user.put("content", userMessage);
+				openaiBody.put("messages",messagesJsonArray);
+			} else {
+				system.put("role", "system");
+				system.put("content", "You are a helpul assistant that helps students with their questions.");
+				user.put("role", "user");
+				user.put("content", userMessage);
+				openaiBody.put("messages",messagesJsonArray);
+			}
+
+			openaiBody.put("model", model);
+			
+			String url = "https://api.openai.com/v1/chat/completions";
+			MiniClient client = new MiniClient();
+			client.setConnectorEndpoint(url);
+			
+			HttpClient httpClient = HttpClient.newHttpClient();
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(UriBuilder.fromUri(url).build())
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", "Bearer " + openaiKey)
+                    .POST(HttpRequest.BodyPublishers.ofString(openaiBody.toJSONString()))
+                    .build();
+
+            // Send the request
+            HttpResponse<String> httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            int responseCode = httpResponse.statusCode();
+            JSONObject response = (JSONObject) parser.parse(httpResponse.body());
+			
+			if (responseCode == HttpURLConnection.HTTP_OK) {
+				String textResponse = "";
+				JSONArray choices = (JSONArray) response.get("choices");
+				if (choices == null) {
+					textResponse = response.toString();
+				} else {
+					System.out.println(choices);
+					JSONObject choicesObj = (JSONObject) choices.get(0);
+					JSONObject message = (JSONObject) choicesObj.get("message");
+					System.out.println(message);
+					textResponse = message.getAsString("content");
+					System.out.println(textResponse);
+				}
+				chatResponse.put("text", textResponse);
+				costs = costCalculation(response);
+				chatResponse.put("costs", costs);
+			} else {
+				chatResponse.put("text", response.toString());
+			}
+	
+		} catch (Throwable e) {
+			e.printStackTrace();
+			chatResponse.appendField("text", "An error has occurred.");
+		}
+
+		return Response.ok().entity(chatResponse).build();
+	}
+
 	public static HashMap<String, String> toMap(JSONObject jsonobj) {
         HashMap<String, String> map = new HashMap<String, String>();
         for (String key : jsonobj.keySet()) {
@@ -401,4 +495,42 @@ public class OpenAIService extends RESTService {
 
 	    return sum;
 	}
+
+	private JSONObject costCalculation(JSONObject response){
+		JSONObject costs = new JSONObject();
+		double cost = 0;
+		JSONObject usage = (JSONObject) response.get("usage");
+		System.out.println(usage);
+		int promptTokens = Integer.parseInt(usage.getAsString("prompt_tokens"));
+		int completionTokens = Integer.parseInt(usage.getAsString("completion_tokens"));
+		int totalTokens = Integer.parseInt(usage.getAsString("total_tokens"));
+		String model = response.getAsString("model");
+
+		if (model.startsWith("gpt-3.5-turbo")) {
+			double inputCosts = promptTokens * 0.0015;
+			double outputCosts = completionTokens * 0.002;
+			cost = inputCosts + outputCosts;
+		} else if (model.startsWith("gpt-4")) {
+			double inputCosts = promptTokens * 0.03;
+			double outputCosts = completionTokens * 0.06;
+			cost = inputCosts + outputCosts;
+		} else if (model.startsWith("gpt-3.5-turbo-16k")) {
+			double inputCosts = promptTokens * 0.003;
+			double outputCosts = completionTokens * 0.004;
+			cost =	inputCosts + outputCosts;
+		} else if (model.startsWith("gpt-4-32k")) {
+			double inputCosts = promptTokens * 0.06;
+			double outputCosts = completionTokens * 0.12;
+			cost = inputCosts + outputCosts;
+		}
+
+		costs.appendField("model", model);
+		costs.appendField("prompt_tokens", promptTokens);
+		costs.appendField("completion_tokens", completionTokens);
+		costs.appendField("total_tokens", totalTokens);
+		costs.appendField("total_cost", cost);
+		
+		return costs;
+	}
+
 }
