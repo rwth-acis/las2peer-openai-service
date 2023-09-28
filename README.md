@@ -35,3 +35,4 @@ The REST-API will be available via *http://localhost:8080/openai* and the las2pe
 | Path | Function name | Description | Parameters | Returns |
 |-----|-----|-------------|---------|---------------|
 | /personalize | personalize | Sends the current conversation path, including the most recent prompt and the bot's original response to it, to OpenAI's chat completion function to generate a more personalized response. |  | |
+| /chat | chat | Handles standard messages that are not recognized by the NLU training model and forwards the message to OpenAI's chat completion function to not interrupt the chat flow. | **model**: specify an openai model<br /> **openaikey**: insert your own openaiKey <br /> **systemMessage**: define your own system Prompt (Default: "You are a helpul assistant that helps students with their questions.") <br /> **msg**: user message | **text**: Response from OpenAI <br /> **costs**: total costs and total tokens used |
