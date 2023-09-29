@@ -398,12 +398,16 @@ public class OpenAIService extends RESTService {
 				system.put("content", systemMessage); 
 				user.put("role", "user");
 				user.put("content", userMessage);
+				messagesJsonArray.add(system);
+				messagesJsonArray.add(user);
 				openaiBody.put("messages",messagesJsonArray);
 			} else {
 				system.put("role", "system");
 				system.put("content", "You are a helpul assistant that helps students with their questions.");
 				user.put("role", "user");
 				user.put("content", userMessage);
+				messagesJsonArray.add(system);
+				messagesJsonArray.add(user);
 				openaiBody.put("messages",messagesJsonArray);
 			}
 

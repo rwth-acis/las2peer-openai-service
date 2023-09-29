@@ -22,6 +22,8 @@ archiva_credentials.xml
 .project
 .settings
 kube
+kubernetes
+
 # Ignore Gradle project-specific cache directory
 .gradle
 
