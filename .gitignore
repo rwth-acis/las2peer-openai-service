@@ -1,3 +1,5 @@
+/output/
+/export/
 /template_project/output/
 /template_project/export/
 /node-storage/
@@ -23,10 +25,7 @@ archiva_credentials.xml
 .settings
 kube
 kubernetes
-<<<<<<< HEAD
-=======
 
->>>>>>> issue01
 # Ignore Gradle project-specific cache directory
 .gradle
 
