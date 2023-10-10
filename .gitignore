@@ -1,7 +1,7 @@
 /output/
 /export/
-/template_project/output/
-/template_project/export/
+/openai-service/output/
+/openai-service/export/
 /node-storage/
 /.las2peer/
 /tmp/
