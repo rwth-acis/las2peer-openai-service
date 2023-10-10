@@ -1,1 +1,0 @@
-typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"i5.las2peer.services.openAIService","l":"ChatMessage"},{"p":"i5.las2peer.services.openAIService","l":"OpenAIService"}];updateSearchResults();
