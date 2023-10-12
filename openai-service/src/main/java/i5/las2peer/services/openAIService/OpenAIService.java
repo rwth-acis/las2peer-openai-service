@@ -146,8 +146,8 @@ public class OpenAIService extends RESTService {
 			String url = "https://api.openai.com/v1/chat/completions";
 			MiniClient client = new MiniClient();
 			client.setConnectorEndpoint(url);
-
-			String openai_api_key = System.getenv("OPENAI_API_KEY");
+			
+			String openai_api_key = jsonBody.getAsString("openaiKey");
 			
 			JSONArray messagesJsonArray = new JSONArray();
 			HashMap<String, String> userMsgMap = new HashMap<String,String>();
@@ -249,7 +249,7 @@ public class OpenAIService extends RESTService {
 			MiniClient client = new MiniClient();
 			client.setConnectorEndpoint(url);
 
-			String openai_api_key = System.getenv("OPENAI_API_KEY");
+			String openai_api_key = jsonBody.getAsString("openaiKey");
 			
 			// TODO: Prepare openaiBody 
 			//messagesJsonArray already formatted as [{"role":"system", "content":"You are a helpful assistant"}]
