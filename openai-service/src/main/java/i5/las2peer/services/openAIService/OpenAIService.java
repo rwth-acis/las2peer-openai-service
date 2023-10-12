@@ -20,6 +20,10 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -47,6 +51,7 @@ import com.knuddels.jtokkit.Encodings;
 import com.knuddels.jtokkit.api.Encoding;
 import com.knuddels.jtokkit.api.EncodingRegistry;
 import com.knuddels.jtokkit.api.EncodingType;
+import com.nimbusds.openid.connect.sdk.util.Resource;
 
 import org.json.*;
 import org.web3j.abi.datatypes.Int;
@@ -60,6 +65,7 @@ import i5.las2peer.api.security.UserAgent;
 import i5.las2peer.logging.L2pLogger;
 import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -377,35 +383,133 @@ public class OpenAIService extends RESTService {
 		JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 		JSONObject jsonBody = null;
 		JSONObject openaiBody = new JSONObject();
+		JSONObject intentBody = new JSONObject();
 		JSONObject chatResponse = new JSONObject();
 		JSONObject costs = new JSONObject();
-		
+		JSONObject costsIntent = new JSONObject();
+
 		try {
 			jsonBody = (JSONObject) parser.parse(body);
 			String model = jsonBody.getAsString("model");
 			String openaiKey = jsonBody.getAsString("openaiKey");
 			String systemMessage = jsonBody.getAsString("systemMessage");
-			System.out.println(systemMessage);
 			String userMessage = jsonBody.getAsString("msg");
-			System.out.println(userMessage);
+			String user_email = jsonBody.getAsString("user");
 			JSONArray messagesJsonArray = new JSONArray();
 			JSONObject system = new JSONObject();
-			JSONObject user = new JSONObject();
 
-			//setup message array for the openai request
+			//for intent classification
+			String classifyIntent = jsonBody.getAsString("classifyIntent");
+			String in_service_context = jsonBody.getAsString("in-service-context");
+			JSONObject remarks = new JSONObject(costsIntent);
+			remarks.put("user", user_email);
+			remarks.put("in-service-context", in_service_context);
+			String caseID = jsonBody.getAsString("caseID");
+			String resource = jsonBody.getAsString("Resource");
+			String time = jsonBody.getAsString("TIME_OF_EVENT");
+			JSONArray intentMessageJsonArray = new JSONArray();
+			JSONObject intent = new JSONObject();
+
+			JSONObject user = new JSONObject();
+			user.put("role", "user");
+			user.put("content", userMessage);
+
+			//classify the intent of the user message using GPT and store it into SQL database
+			if (classifyIntent.contains("true")) {
+				String intentMessage = "You are a intent classifier that classifies the intent of the user message. The intent should contain a verb and a noun. Here is an example: User message: 'I want to book a flight to Berlin.', Answer: 'bookFlight'.";
+				intent.put("role", "system");
+				intent.put("content", intentMessage);
+				intentMessageJsonArray.add(intent);
+				intentMessageJsonArray.add(user);
+				intentBody.put("messages",intentMessageJsonArray);
+				intentBody.put("model", model);
+
+				String url = "https://api.openai.com/v1/chat/completions";
+				MiniClient client = new MiniClient();
+				client.setConnectorEndpoint(url);
+				
+				HttpClient httpClientIntent = HttpClient.newHttpClient();
+				HttpRequest httpRequestIntent = HttpRequest.newBuilder()
+						.uri(UriBuilder.fromUri(url).build())
+						.header("Content-Type", "application/json")
+						.header("Authorization", "Bearer " + openaiKey)
+						.POST(HttpRequest.BodyPublishers.ofString(intentBody.toJSONString()))
+						.build();
+						
+				// Send the request
+				HttpResponse<String> httpResponse = httpClientIntent.send(httpRequestIntent, HttpResponse.BodyHandlers.ofString());
+				int responseCodeIntent = httpResponse.statusCode();
+				JSONObject responseIntent = (JSONObject) parser.parse(httpResponse.body());
+				
+				if (responseCodeIntent == HttpURLConnection.HTTP_OK) {
+					String textResponseIntent = "";
+					JSONArray choices = (JSONArray) responseIntent.get("choices");
+
+					if (choices == null) {
+						textResponseIntent = responseIntent.toString();
+					} else {
+						System.out.println(choices);
+						JSONObject choicesObj = (JSONObject) choices.get(0);
+						JSONObject message = (JSONObject) choicesObj.get("message");
+						System.out.println(message);
+						textResponseIntent = message.getAsString("content");
+						System.out.println(textResponseIntent);
+					}
+
+					chatResponse.put("Intent", textResponseIntent);
+					costsIntent = costCalculation(responseIntent);
+					chatResponse.put("costsIntent", costsIntent);
+
+					//Save data to SQL database
+					// PreparedStatement stmt = null;
+					// Connection conn = null;
+					// try {
+					// 	conn = datasource.getConnection();
+
+					// 	stmt = conn.prepareStatement("INSERT INTO MESSAGE (`Event`, `REMARKS`, `CASE_ID`, `ACTIVITY_NAME`, `RESOURCE`, `RESOURCE_TYPE`, `TIME_OF_EVENT`) VALUES (?, ?, ?)");
+					// 	stmt.setString(1, "SERVICE_CUSTOM_MESSAGE_1");
+					// 	stmt.setString(2, remarks.toJSONString());
+					// 	stmt.setString(3, caseID);
+					// 	stmt.setString(4, textResponseIntent);
+					// 	stmt.setString(5, in_service_context);
+					// 	stmt.setString(6, resource);
+					// 	stmt.setString(7, "bot");
+					// 	stmt.setString(8, time);
+					// 	stmt.executeUpdate();
+					// } catch (SQLException e) {
+					// 	e.printStackTrace();
+					// } finally {
+					// 	try {
+					// 		if (stmt != null)
+					// 			stmt.close();
+					// 	} catch (Exception e) {
+					// 		e.printStackTrace();
+					// 	}
+					// 	;
+					// 	try {
+					// 		if (conn != null) 
+					// 			conn.close();
+					// 	} catch (Exception e) {
+					// 		e.printStackTrace();
+					// 	}
+					// }
+				} else {
+					chatResponse.put("intent", responseIntent.toString());
+				}
+			} else {
+				chatResponse.put("intent", "No intent classification");
+			}
+
+			//setup message array for the openai request to answer the user message
 			if (systemMessage != null) {
 				system.put("role", "system");
 				system.put("content", systemMessage); 
-				user.put("role", "user");
-				user.put("content", userMessage);
 				messagesJsonArray.add(system);
 				messagesJsonArray.add(user);
 				openaiBody.put("messages",messagesJsonArray);
 			} else {
 				system.put("role", "system");
 				system.put("content", "You are a helpul assistant that helps students with their questions.");
-				user.put("role", "user");
-				user.put("content", userMessage);
 				messagesJsonArray.add(system);
 				messagesJsonArray.add(user);
 				openaiBody.put("messages",messagesJsonArray);
@@ -457,6 +561,68 @@ public class OpenAIService extends RESTService {
 
 		return Response.ok().entity(chatResponse).build();
 	}
+
+	@POST
+	@Path("/biwibot")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+		@ApiResponses(
+			value = { 
+					@ApiResponse(
+						code = HttpURLConnection.HTTP_OK,
+						message = "Connected.")})
+		@ApiOperation(
+				value = "Get the chat response from biwibot",
+				notes = "Returns the chat response from biwibot")
+		public Response biwibot(String body) {
+			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+			JSONObject json = null;
+			JSONObject chatResponse = new JSONObject();
+			JSONObject newEvent = new JSONObject();
+			String question = null;
+			String channel = null;
+
+			try {
+				json = (JSONObject) p.parse(body);
+				System.out.println(json.toJSONString());
+				question = json.getAsString("text");
+				channel = json.getAsString("channel");
+				chatResponse.put("channel", channel);
+				newEvent.put("question", question);
+				newEvent.put("channel", channel);
+
+				// Make the POST request to localhost:5000/chat
+				String url = "https://biwibot.tech4comp.dbis.rwth-aachen.de/generate_response";
+				HttpClient httpClient = HttpClient.newHttpClient();
+				HttpRequest httpRequest = HttpRequest.newBuilder()
+						.uri(UriBuilder.fromUri(url).build())
+						.header("Content-Type", "application/json")
+						.POST(HttpRequest.BodyPublishers.ofString(newEvent.toJSONString()))
+						.build();
+
+				// Send the request
+				HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+				int responseCode = response.statusCode();
+
+				if (responseCode == HttpURLConnection.HTTP_OK) {
+					System.out.print("Response from service: " + response.body());
+					// Update chatResponse with the result from the POST request
+					chatResponse.put("text", response.body());
+				} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
+					// Handle unsuccessful response
+					chatResponse.appendField("text", "An error has occurred.");
+				}
+
+			} catch (ParseException | IOException | InterruptedException e) {
+				e.printStackTrace();
+				chatResponse.appendField("text", "An error has occurred.");
+			} catch (Throwable e) {
+				e.printStackTrace();
+				chatResponse.appendField("text", "An unknown error has occurred.");
+			}
+
+			return Response.ok().entity(chatResponse).build();
+		}
 
 	public static HashMap<String, String> toMap(JSONObject jsonobj) {
         HashMap<String, String> map = new HashMap<String, String>();
