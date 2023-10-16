@@ -573,55 +573,56 @@ public class OpenAIService extends RESTService {
 	@ApiOperation(
 			value = "Get the chat response from biwibot",
 			notes = "Returns the chat response from biwibot")
-		public Response biwibot(String body) {
-			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-			JSONObject json = null;
-			JSONObject chatResponse = new JSONObject();
-			JSONObject newEvent = new JSONObject();
-			String question = null;
-			String channel = null;
-			
-			try {
-				json = (JSONObject) p.parse(body);
-				System.out.println(json.toJSONString());
-				question = json.getAsString("text");
-				channel = json.getAsString("channel");
-				chatResponse.put("channel", channel);
-				newEvent.put("question", question);
-				newEvent.put("channel", channel);
-				System.out.print(newEvent);
-				// Make the POST request to localhost:5000/chat
-				String url = "https://biwibot.tech4comp.dbis.rwth-aachen.de/generate_response";
-				HttpClient httpClient = HttpClient.newHttpClient();
-				HttpRequest httpRequest = HttpRequest.newBuilder()
-						.uri(UriBuilder.fromUri(url).build())
-						.header("Content-Type", "application/json")
-						.POST(HttpRequest.BodyPublishers.ofString(newEvent.toJSONString()))
-						.build();
+	public Response biwibot(String body) {
+		System.out.println(body);
+		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+		JSONObject json = null;
+		JSONObject chatResponse = new JSONObject();
+		JSONObject newEvent = new JSONObject();
+		String question = null;
+		String channel = null;
+		
+		try {
+			json = (JSONObject) p.parse(body);
+			System.out.println(json.toJSONString());
+			question = json.getAsString("text");
+			channel = json.getAsString("channel");
+			chatResponse.put("channel", channel);
+			newEvent.put("question", question);
+			newEvent.put("channel", channel);
+			System.out.print(newEvent);
+			// Make the POST request to localhost:5000/chat
+			String url = "https://biwibot.tech4comp.dbis.rwth-aachen.de/generate_response";
+			HttpClient httpClient = HttpClient.newHttpClient();
+			HttpRequest httpRequest = HttpRequest.newBuilder()
+					.uri(UriBuilder.fromUri(url).build())
+					.header("Content-Type", "application/json")
+					.POST(HttpRequest.BodyPublishers.ofString(newEvent.toJSONString()))
+					.build();
 
-				// Send the request
-				HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-				int responseCode = response.statusCode();
+			// Send the request
+			HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+			int responseCode = response.statusCode();
 
-				if (responseCode == HttpURLConnection.HTTP_OK) {
-					System.out.print("Response from service: " + response.body());
-					// Update chatResponse with the result from the POST request
-					chatResponse.put("text", response.body());
-				} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
-					// Handle unsuccessful response
-					chatResponse.appendField("text", "An error has occurred.");
-				}
-
-			} catch (ParseException | IOException | InterruptedException e) {
-				e.printStackTrace();
+			if (responseCode == HttpURLConnection.HTTP_OK) {
+				System.out.print("Response from service: " + response.body());
+				// Update chatResponse with the result from the POST request
+				chatResponse.put("text", response.body());
+			} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
+				// Handle unsuccessful response
 				chatResponse.appendField("text", "An error has occurred.");
-			} catch (Throwable e) {
-				e.printStackTrace();
-				chatResponse.appendField("text", "An unknown error has occurred.");
 			}
 
-			return Response.ok().entity(chatResponse).build();
+		} catch (ParseException | IOException | InterruptedException e) {
+			e.printStackTrace();
+			chatResponse.appendField("text", "An error has occurred.");
+		} catch (Throwable e) {
+			e.printStackTrace();
+			chatResponse.appendField("text", "An unknown error has occurred.");
 		}
+
+		return Response.ok().entity(chatResponse).build();
+	}
 
 	public static HashMap<String, String> toMap(JSONObject jsonobj) {
         HashMap<String, String> map = new HashMap<String, String>();
