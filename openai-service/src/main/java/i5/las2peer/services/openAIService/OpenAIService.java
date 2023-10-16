@@ -565,15 +565,14 @@ public class OpenAIService extends RESTService {
 	@POST
 	@Path("/biwibot")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Consumes(MediaType.APPLICATION_JSON)
-		@ApiResponses(
-			value = { 
-					@ApiResponse(
-						code = HttpURLConnection.HTTP_OK,
-						message = "Connected.")})
-		@ApiOperation(
-				value = "Get the chat response from biwibot",
-				notes = "Returns the chat response from biwibot")
+	@ApiResponses(
+		value = { 
+				@ApiResponse(
+					code = HttpURLConnection.HTTP_OK,
+					message = "Connected.")})
+	@ApiOperation(
+			value = "Get the chat response from biwibot",
+			notes = "Returns the chat response from biwibot")
 		public Response biwibot(String body) {
 			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 			JSONObject json = null;
@@ -581,7 +580,7 @@ public class OpenAIService extends RESTService {
 			JSONObject newEvent = new JSONObject();
 			String question = null;
 			String channel = null;
-
+			
 			try {
 				json = (JSONObject) p.parse(body);
 				System.out.println(json.toJSONString());
@@ -590,7 +589,7 @@ public class OpenAIService extends RESTService {
 				chatResponse.put("channel", channel);
 				newEvent.put("question", question);
 				newEvent.put("channel", channel);
-
+				System.out.print(newEvent);
 				// Make the POST request to localhost:5000/chat
 				String url = "https://biwibot.tech4comp.dbis.rwth-aachen.de/generate_response";
 				HttpClient httpClient = HttpClient.newHttpClient();
