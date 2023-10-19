@@ -45,6 +45,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.java_websocket.util.Base64;
 
 import com.knuddels.jtokkit.Encodings;
@@ -103,6 +104,7 @@ import java.nio.charset.StandardCharsets;
 				title = "las2peer OpenAI Service",
 				version = "1.0.0",
 				description = "A las2peer wrapper service for the social-bot-manager service to make request to OpenAI API functions.",
+				termsOfService = "https://tech4comp.de/",
 				contact = @Contact(
 						name = "Samuel Kwong",
 						email = "samuel.kwong@rwth-aachen.de"),
@@ -573,14 +575,14 @@ public class OpenAIService extends RESTService {
 	@ApiOperation(
 			value = "Get the chat response from biwibot",
 			notes = "Returns the chat response from biwibot")
-	public Response biwibot(String body) {
-		System.out.println(body);
+	public Response biwibot(String body, @FormDataParam("channel") String channel) {
+		System.out.println("Input:" + body);
+		System.out.println("Channel": + channel);
 		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 		JSONObject json = null;
 		JSONObject chatResponse = new JSONObject();
 		JSONObject newEvent = new JSONObject();
 		String question = null;
-		String channel = null;
 		
 		try {
 			json = (JSONObject) p.parse(body);
@@ -606,19 +608,20 @@ public class OpenAIService extends RESTService {
 
 			if (responseCode == HttpURLConnection.HTTP_OK) {
 				System.out.print("Response from service: " + response.body());
+
 				// Update chatResponse with the result from the POST request
-				chatResponse.put("text", response.body());
+				chatResponse.put("AIResponse", response.body());
 			} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
 				// Handle unsuccessful response
-				chatResponse.appendField("text", "An error has occurred.");
+				chatResponse.appendField("AIResponse", "An error has occurred.");
 			}
-
+			System.out.println(chatResponse);
 		} catch (ParseException | IOException | InterruptedException e) {
 			e.printStackTrace();
-			chatResponse.appendField("text", "An error has occurred.");
+			chatResponse.appendField("AIResponse", "An error has occurred.");
 		} catch (Throwable e) {
 			e.printStackTrace();
-			chatResponse.appendField("text", "An unknown error has occurred.");
+			chatResponse.appendField("AIResponse", "An unknown error has occurred.");
 		}
 
 		return Response.ok().entity(chatResponse).build();
