@@ -577,7 +577,7 @@ public class OpenAIService extends RESTService {
 			notes = "Returns the chat response from biwibot")
 	public Response biwibot(String body, @FormDataParam("channel") String channel) {
 		System.out.println("Input:" + body);
-		System.out.println("Channel": + channel);
+		System.out.println("Channel:" + channel);
 		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 		JSONObject json = null;
 		JSONObject chatResponse = new JSONObject();
