@@ -575,8 +575,8 @@ public class OpenAIService extends RESTService {
 	@ApiOperation(
 			value = "Get the chat response from biwibot",
 			notes = "Returns the chat response from biwibot")
-	public Response biwibot(String body, @FormDataParam("channel") String channel) {
-		System.out.println("Input:" + body);
+	public Response biwibot(@FormDataParam("msg") String msg, @FormDataParam("channel") String channel) {
+		System.out.println("Msg:" + msg);
 		System.out.println("Channel:" + channel);
 		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 		JSONObject json = null;
@@ -585,10 +585,8 @@ public class OpenAIService extends RESTService {
 		String question = null;
 		
 		try {
-			json = (JSONObject) p.parse(body);
-			System.out.println(json.toJSONString());
-			question = json.getAsString("msg");
-			channel = json.getAsString("channel");
+			// json = (JSONObject) p.parse(body);
+			question = msg;
 			chatResponse.put("channel", channel);
 			newEvent.put("question", question);
 			newEvent.put("channel", channel);
@@ -616,7 +614,7 @@ public class OpenAIService extends RESTService {
 				chatResponse.appendField("AIResponse", "An error has occurred.");
 			}
 			System.out.println(chatResponse);
-		} catch (ParseException | IOException | InterruptedException e) {
+		} catch ( IOException | InterruptedException e) {
 			e.printStackTrace();
 			chatResponse.appendField("AIResponse", "An error has occurred.");
 		} catch (Throwable e) {
