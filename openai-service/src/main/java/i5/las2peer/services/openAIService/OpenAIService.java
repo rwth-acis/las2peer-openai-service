@@ -578,50 +578,55 @@ public class OpenAIService extends RESTService {
 	public Response biwibot(@FormDataParam("msg") String msg, @FormDataParam("channel") String channel) {
 		System.out.println("Msg:" + msg);
 		System.out.println("Channel:" + channel);
-		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-		JSONObject json = null;
+
 		JSONObject chatResponse = new JSONObject();
 		JSONObject newEvent = new JSONObject();
 		String question = null;
 		
-		try {
-			// json = (JSONObject) p.parse(body);
-			question = msg;
-			chatResponse.put("channel", channel);
-			newEvent.put("question", question);
-			newEvent.put("channel", channel);
-			System.out.print(newEvent);
-			// Make the POST request to localhost:5000/chat
-			String url = "https://biwibot.tech4comp.dbis.rwth-aachen.de/generate_response";
-			HttpClient httpClient = HttpClient.newHttpClient();
-			HttpRequest httpRequest = HttpRequest.newBuilder()
-					.uri(UriBuilder.fromUri(url).build())
-					.header("Content-Type", "application/json")
-					.POST(HttpRequest.BodyPublishers.ofString(newEvent.toJSONString()))
-					.build();
+		if(msg != "!exit"){
+			try {
+				question = msg;
+				chatResponse.put("channel", channel);
+				newEvent.put("question", question);
+				newEvent.put("channel", channel);
+				System.out.print(newEvent);
+				// Make the POST request to localhost:5000/chat
+				String url = "https://biwibot.tech4comp.dbis.rwth-aachen.de/generate_response";
+				HttpClient httpClient = HttpClient.newHttpClient();
+				HttpRequest httpRequest = HttpRequest.newBuilder()
+						.uri(UriBuilder.fromUri(url).build())
+						.header("Content-Type", "application/json")
+						.POST(HttpRequest.BodyPublishers.ofString(newEvent.toJSONString()))
+						.build();
 
-			// Send the request
-			HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-			int responseCode = response.statusCode();
+				// Send the request
+				HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+				int responseCode = response.statusCode();
 
-			if (responseCode == HttpURLConnection.HTTP_OK) {
-				System.out.print("Response from service: " + response.body());
+				if (responseCode == HttpURLConnection.HTTP_OK) {
+					System.out.print("Response from service: " + response.body());
 
-				// Update chatResponse with the result from the POST request
-				chatResponse.appendField("AIResponse", response.body());
-			} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
-				// Handle unsuccessful response
+					// Update chatResponse with the result from the POST request
+					chatResponse.appendField("AIResponse", response.body());
+				} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
+					// Handle unsuccessful response
+					chatResponse.appendField("AIResponse", "An error has occurred.");
+				}
+				System.out.println(chatResponse);
+			} catch ( IOException | InterruptedException e) {
+				e.printStackTrace();
 				chatResponse.appendField("AIResponse", "An error has occurred.");
+			} catch (Throwable e) {
+				e.printStackTrace();
+				chatResponse.appendField("AIResponse", "An unknown error has occurred.");
 			}
-			System.out.println(chatResponse);
-		} catch ( IOException | InterruptedException e) {
-			e.printStackTrace();
-			chatResponse.appendField("AIResponse", "An error has occurred.");
-		} catch (Throwable e) {
-			e.printStackTrace();
-			chatResponse.appendField("AIResponse", "An unknown error has occurred.");
-		}
 
+		} else if (msg == "!exit"){
+			chatResponse.appendField("AIResponse", "Exit ausgeführt");
+		} else {
+			chatResponse.appendField("AIResponse", "Ich habe leider keine Nachricht bekommen.");
+		}
+		
 		return Response.ok().entity(chatResponse).build();
 	}
 
