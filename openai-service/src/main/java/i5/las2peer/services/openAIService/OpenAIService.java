@@ -608,7 +608,7 @@ public class OpenAIService extends RESTService {
 					
 					// Update chatResponse with the result from the POST request
 					chatResponse.appendField("AIResponse", response.body());
-					chatResponse.appendField("contextOn", contextOn);
+					chatResponse.appendField("closeContext", contextOn);
 				} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
 					// Handle unsuccessful response
 					chatResponse.appendField("AIResponse", "An error has occurred.");
