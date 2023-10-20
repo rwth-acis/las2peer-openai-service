@@ -583,7 +583,7 @@ public class OpenAIService extends RESTService {
 		JSONObject newEvent = new JSONObject();
 		String question = null;
 		
-		if(msg != "!exit"){
+		if(!msg.equals("!exit")){
 			try {
 				question = msg;
 				chatResponse.put("channel", channel);
@@ -621,7 +621,7 @@ public class OpenAIService extends RESTService {
 				chatResponse.appendField("AIResponse", "An unknown error has occurred.");
 			}
 
-		} else if (msg == "!exit"){
+		} else if (msg.equals("!exit")){
 			chatResponse.appendField("AIResponse", "Exit ausgeführt");
 		} else {
 			chatResponse.appendField("AIResponse", "Ich habe leider keine Nachricht bekommen.");
