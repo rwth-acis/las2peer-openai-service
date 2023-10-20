@@ -578,7 +578,7 @@ public class OpenAIService extends RESTService {
 	public Response biwibot(@FormDataParam("msg") String msg, @FormDataParam("channel") String channel) {
 		System.out.println("Msg:" + msg);
 		System.out.println("Channel:" + channel);
-
+		Boolean contextOn = false;
 		JSONObject chatResponse = new JSONObject();
 		JSONObject newEvent = new JSONObject();
 		String question = null;
@@ -605,9 +605,10 @@ public class OpenAIService extends RESTService {
 
 				if (responseCode == HttpURLConnection.HTTP_OK) {
 					System.out.println("Response from service: " + response.body());
-
+					
 					// Update chatResponse with the result from the POST request
 					chatResponse.appendField("AIResponse", response.body());
+					chatResponse.appendField("contextOn", contextOn);
 				} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
 					// Handle unsuccessful response
 					chatResponse.appendField("AIResponse", "An error has occurred.");
