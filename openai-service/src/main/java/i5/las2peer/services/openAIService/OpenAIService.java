@@ -604,7 +604,7 @@ public class OpenAIService extends RESTService {
 				int responseCode = response.statusCode();
 
 				if (responseCode == HttpURLConnection.HTTP_OK) {
-					System.out.print("Response from service: " + response.body());
+					System.out.println("Response from service: " + response.body());
 
 					// Update chatResponse with the result from the POST request
 					chatResponse.appendField("AIResponse", response.body());
@@ -612,7 +612,7 @@ public class OpenAIService extends RESTService {
 					// Handle unsuccessful response
 					chatResponse.appendField("AIResponse", "An error has occurred.");
 				}
-				System.out.println(chatResponse);
+				//System.out.println(chatResponse);
 			} catch ( IOException | InterruptedException e) {
 				e.printStackTrace();
 				chatResponse.appendField("AIResponse", "An error has occurred.");
@@ -627,7 +627,7 @@ public class OpenAIService extends RESTService {
 			chatResponse.appendField("AIResponse", "Ich habe leider keine Nachricht bekommen.");
 		}
 		
-		return Response.ok().entity(chatResponse).build();
+		return Response.ok().entity(chatResponse.toString()).build();
 	}
 
 	public static HashMap<String, String> toMap(JSONObject jsonobj) {
