@@ -579,6 +579,7 @@ public class OpenAIService extends RESTService {
 		System.out.println("Msg:" + msg);
 		System.out.println("Channel:" + channel);
 		Boolean contextOn = false;
+		Boolean contextOff = true;
 		JSONObject chatResponse = new JSONObject();
 		JSONObject newEvent = new JSONObject();
 		String question = null;
@@ -623,7 +624,8 @@ public class OpenAIService extends RESTService {
 			}
 
 		} else if (msg.equals("!exit")){
-			chatResponse.appendField("AIResponse", "Exit ausgeführt");
+			chatResponse.appendField("closeContext", contextOff);
+			chatResponse.appendField("AIResponse", "Exit AI Tutor");
 		} else {
 			chatResponse.appendField("AIResponse", "Ich habe leider keine Nachricht bekommen.");
 		}
