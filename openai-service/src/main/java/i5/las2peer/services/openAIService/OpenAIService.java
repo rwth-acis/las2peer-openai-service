@@ -655,6 +655,7 @@ public class OpenAIService extends RESTService {
 		JSONObject chatResponse = new JSONObject();
 		JSONObject newEvent = new JSONObject();
 		String question = null;
+		String channel = null;
 
 		try {
 			json = (JSONObject) p.parse(body);
