@@ -612,7 +612,7 @@ public class OpenAIService extends RESTService {
 					chatResponse.appendField("closeContext", contextOn);
 				} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
 					// Handle unsuccessful response
-					chatResponse.appendField("AIResponse", "An error has occurred.");
+					chatResponse.appendField("AIResponse", "Biwibot error has occured.");
 				}
 				//System.out.println(chatResponse);
 			} catch ( IOException | InterruptedException e) {
@@ -626,6 +626,9 @@ public class OpenAIService extends RESTService {
 		} else if (msg.equals("!exit")){
 			chatResponse.appendField("closeContext", contextOff);
 			chatResponse.appendField("AIResponse", "Exit AI Tutor");
+		} else if (msg.contains("!welcome")) {
+			chatResponse.appendField("AIResponse", "Nutze bitte das X, um zum Hauptmenü zu gelangen.");
+			chatResponse.appendField("closeContext", contextOff);
 		} else {
 			chatResponse.appendField("AIResponse", "Ich habe leider keine Nachricht bekommen.");
 		}
