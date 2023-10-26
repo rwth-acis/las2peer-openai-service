@@ -683,19 +683,20 @@ public class OpenAIService extends RESTService {
 				System.out.println("Response from service: " + response.body());
 				
 				// Update chatResponse with the result from the POST request
-				chatResponse.appendField("msg", response.body());
+				chatResponse.appendField("text", response.body());
 				chatResponse.appendField("closeContext", contextOn);
 			} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
 				// Handle unsuccessful response
-				chatResponse.appendField("msg", "Biwibot error has occured.");
+				chatResponse.appendField("text", "Biwibot error has occured.");
+				chatResponse.appendField("closeContext", contextOn);
 			}
 			//System.out.println(chatResponse);
 		} catch ( IOException | InterruptedException e) {
 			e.printStackTrace();
-			chatResponse.appendField("msg", "An error has occurred.");
+			chatResponse.appendField("text", "An error has occurred.");
 		} catch (Throwable e) {
 			e.printStackTrace();
-			chatResponse.appendField("msg", "An unknown error has occurred.");
+			chatResponse.appendField("text", "An unknown error has occurred.");
 		}
 
 		
