@@ -676,7 +676,11 @@ public class OpenAIService extends RESTService {
 					.build();
 
 			// Send the request
+			long starttime = System.currentTimeMillis();
 			HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+			long end = System.currentTimeMillis();
+			long duration = end - starttime;
+			System.out.println("Duration of HttpResponse: " + Long.toString(duration));
 			int responseCode = response.statusCode();
 
 			if (responseCode == HttpURLConnection.HTTP_OK) {
