@@ -666,6 +666,9 @@ public class OpenAIService extends RESTService {
 		System.out.println(json.toJSONString());
 		String question = json.getAsString("msg");
 		String channel = json.getAsString("channel");
+		if (isActive == null) {
+			isActive = new HashMap<String, Boolean>();
+		}
 		isActive.put(channel, true);
 		chatResponse.put("channel", channel);
 		newEvent.put("question", question);
