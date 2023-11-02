@@ -648,6 +648,7 @@ public class OpenAIService extends RESTService {
 			value = "Get the chat response from biwibot",
 			notes = "Returns the chat response from biwibot")
 	public Response biwibottest(String body) {
+		// String body is possible because of Rocket.Chat Message Handler, for Restful Services use FormDataParam instead.
 		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
         JSONObject json = null;
 		Boolean contextOn = false;
@@ -656,7 +657,7 @@ public class OpenAIService extends RESTService {
 		JSONObject newEvent = new JSONObject();
 		String question = null;
 		String channel = null;
-
+		long starttime = System.currentTimeMillis();
 		try {
 			json = (JSONObject) p.parse(body);
             System.out.println(json.toJSONString());
@@ -676,16 +677,15 @@ public class OpenAIService extends RESTService {
 					.build();
 
 			// Send the request
-			long starttime = System.currentTimeMillis();
 			HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-			long end = System.currentTimeMillis();
-			long duration = end - starttime;
-			System.out.println("Duration of HttpResponse: " + Long.toString(duration));
 			int responseCode = response.statusCode();
 
 			if (responseCode == HttpURLConnection.HTTP_OK) {
 				System.out.println("Response from service: " + response.body());
-				
+				long end = System.currentTimeMillis();
+				long duration = end - starttime;
+				System.out.println("Duration of HttpResponse: " + Long.toString(duration));
+
 				// Update chatResponse with the result from the POST request
 				chatResponse.appendField("text", response.body());
 				chatResponse.appendField("closeContext", contextOn);
