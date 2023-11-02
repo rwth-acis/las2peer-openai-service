@@ -743,13 +743,13 @@ public class OpenAIService extends RESTService {
 		try {    
 			System.out.println("Starting callback to botmanager with url: " + callbackUrl+ "/"+ "sendMessageToRocketChat/" + channel + "/" + email );
 			Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
-			FormDataMultiPart mp = new FormDataMultiPart();
+			String mp = null;
 			System.out.println(body);
-			mp = mp.field("msg", body.toJSONString());
+			mp = body.toJSONString();
 			WebTarget target = textClient
 					.target(callbackUrl + "/" + "sendMessageToRocketChat" + "/" + channel + "/" + email);
 			Response response = target.request()
-					.post(javax.ws.rs.client.Entity.entity(mp, mp.getMediaType()));
+					.post(javax.ws.rs.client.Entity.entity(mp, MediaType.APPLICATION_JSON));
 					String test = response.readEntity(String.class);
 			System.out.println("Finished callback to botmanager with response: " + test);
 		} catch (Exception e) {
