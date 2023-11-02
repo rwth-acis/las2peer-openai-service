@@ -661,7 +661,7 @@ public class OpenAIService extends RESTService {
 		// Boolean contextOff = true;
 		JSONObject chatResponse = new JSONObject();
 		JSONObject newEvent = new JSONObject();
-		String callbackUrl = "https://las2peer.tech4comp.dbis.rwth-aachen.de/SBFManager/RESTfulChat";
+		String callbackUrl = "https://las2peer.tech4comp.dbis.rwth-aachen.de/SBFManager/";
 		json = (JSONObject) p.parse(body);
 		System.out.println(json.toJSONString());
 		String question = json.getAsString("msg");
