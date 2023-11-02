@@ -666,6 +666,7 @@ public class OpenAIService extends RESTService {
 		System.out.println(json.toJSONString());
 		String question = json.getAsString("msg");
 		String channel = json.getAsString("channel");
+		String email = json.getAsString("email");
 		if (isActive == null) {
 			isActive = new HashMap<String, Boolean>();
 		}
@@ -708,16 +709,16 @@ public class OpenAIService extends RESTService {
 							chatResponse.appendField("closeContext", contextOn);
 						}
 
-						callBack(callbackUrl, channel ,channel, chatResponse);
+						callBack(callbackUrl, channel , chatResponse, email);
 						isActive.put(channel, false);
 					} catch ( IOException | InterruptedException e) {
 						e.printStackTrace();
 						chatResponse.appendField("text", "An error has occurred.");
-						callBack(callbackUrl, channel, channel, chatResponse);
+						callBack(callbackUrl, channel, chatResponse, email);
 					} catch (Throwable e) {
 						e.printStackTrace();
 						chatResponse.appendField("text", "An unknown error has occurred.");
-						callBack(callbackUrl, channel, channel, chatResponse);
+						callBack(callbackUrl, channel, chatResponse, email);
 					}
 				}
 			}).start();
@@ -738,15 +739,15 @@ public class OpenAIService extends RESTService {
 	}
 
 	
-	public void callBack(String callbackUrl, String uuid, String channel, JSONObject body){
+	public void callBack(String callbackUrl, String channel, JSONObject body, String email){
 		try {    
-			System.out.println("Starting callback to botmanager with url: " + callbackUrl+ "/" + channel + "/" + channel + "/" );
+			System.out.println("Starting callback to botmanager with url: " + callbackUrl+ "/"+ "sendMessageToRocketChat/" + channel + "/" + email );
 			Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
 			FormDataMultiPart mp = new FormDataMultiPart();
 			System.out.println(body);
-			mp = mp.field("files", body.toJSONString());
+			mp = mp.field("msg", body.toJSONString());
 			WebTarget target = textClient
-					.target(callbackUrl + "/" + uuid + "/" + channel + "/");
+					.target(callbackUrl + "/" + "sendMessageToRocketChat" + "/" + channel + "/" + email);
 			Response response = target.request()
 					.post(javax.ws.rs.client.Entity.entity(mp, mp.getMediaType()));
 					String test = response.readEntity(String.class);
