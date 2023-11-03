@@ -701,11 +701,11 @@ public class OpenAIService extends RESTService {
 							System.out.println("Response from service: " + response.body());
 							
 							// Update chatResponse with the result from the POST request
-							chatResponse.appendField("text", response.body());
+							chatResponse.appendField("msg", response.body());
 							chatResponse.appendField("closeContext", contextOn);
 						} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
 							// Handle unsuccessful response
-							chatResponse.appendField("text", "Biwibot error has occured.");
+							chatResponse.appendField("msg", "Biwibot error has occured.");
 							chatResponse.appendField("closeContext", contextOn);
 						}
 
@@ -713,11 +713,11 @@ public class OpenAIService extends RESTService {
 						isActive.put(channel, false);
 					} catch ( IOException | InterruptedException e) {
 						e.printStackTrace();
-						chatResponse.appendField("text", "An error has occurred.");
+						chatResponse.appendField("msg", "An error has occurred.");
 						callBack(callbackUrl, channel, chatResponse, email);
 					} catch (Throwable e) {
 						e.printStackTrace();
-						chatResponse.appendField("text", "An unknown error has occurred.");
+						chatResponse.appendField("msg", "An unknown error has occurred.");
 						callBack(callbackUrl, channel, chatResponse, email);
 					}
 				}
@@ -740,14 +740,15 @@ public class OpenAIService extends RESTService {
 
 	
 	public void callBack(String callbackUrl, String channel, JSONObject body, String email){
-		try {    
-			System.out.println("Starting callback to botmanager with url: " + callbackUrl+ "/"+ "sendMessageToRocketChat/" + channel + "/" + email );
+		try {
+			String token = "TestBot:TestBot";    
+			System.out.println("Starting callback to botmanager with url: " + callbackUrl+ "/"+ "sendMessageToRocketChat/" + token + "/" + email );
 			Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
 			String mp = null;
 			System.out.println(body);
 			mp = body.toJSONString();
 			WebTarget target = textClient
-					.target(callbackUrl + "/" + "sendMessageToRocketChat" + "/" + channel + "/" + email);
+					.target(callbackUrl + "/" + "sendMessageToRocketChat" + "/" + token + "/" + email);
 			Response response = target.request()
 					.post(javax.ws.rs.client.Entity.entity(mp, MediaType.APPLICATION_JSON));
 					String test = response.readEntity(String.class);
