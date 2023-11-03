@@ -741,7 +741,6 @@ public class OpenAIService extends RESTService {
 	
 	public void callBack(String callbackUrl, String channel, JSONObject body, String email){
 		try {
-			email = "testbot@test.bot";
 			String token = "TestBot:TestBot";    
 			System.out.println("Starting callback to botmanager with url: " + callbackUrl+ "/"+ "sendMessageToRocketChat/" + token + "/" + email );
 			Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
