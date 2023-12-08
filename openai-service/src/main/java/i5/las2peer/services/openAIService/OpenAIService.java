@@ -803,8 +803,9 @@ public class OpenAIService extends RESTService {
 
 	public void RESTcallBack(String callbackUrl, String channel, JSONObject body){
 		try {
-			String organization = channel.split("-")[0];
-			String channelpart = channel.split("-")[1];
+			String[] parts = channel.split("-");
+			String organization = parts[0];
+			String channelpart = parts[1];
 			System.out.println("Starting callback to botmanager with url: " + callbackUrl+ "/"+ organization + "/" + channelpart + "/" + "AsyncMessage");
 			Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
 			String mp = null;
