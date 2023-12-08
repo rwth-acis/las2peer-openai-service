@@ -802,13 +802,15 @@ public class OpenAIService extends RESTService {
 
 	public void RESTcallBack(String callbackUrl, String channel, JSONObject body){
 		try {
-			System.out.println("Starting callback to botmanager with url: " + callbackUrl+ "/" + channel + "/" + "AsyncMessage");
+			String organization = channel.split("-")[0];
+			String channelpart = channel.split("-")[1];
+			System.out.println("Starting callback to botmanager with url: " + callbackUrl+ "/"+ organization + "/" + channelpart + "/" + "AsyncMessage");
 			Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
 			String mp = null;
 			System.out.println(body);
 			mp = body.toJSONString();
 			WebTarget target = textClient
-					.target(callbackUrl + "/" + channel + "/" + "AsyncMessage");
+					.target(callbackUrl + "/"+ organization + "/" + channelpart + "/" + "AsyncMessage");
 			Response response = target.request()
 					.post(javax.ws.rs.client.Entity.entity(mp, MediaType.APPLICATION_JSON));
 					String test = response.readEntity(String.class);
