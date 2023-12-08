@@ -695,7 +695,7 @@ public class OpenAIService extends RESTService {
 		return Response.ok().entity(response.toString()).build();
 	}
 
-	public JSONObject biwibot(@FormDataParam("msg") String msg, @FormDataParam("channel") String channel, @FormDataParam("sbfmUrl") String sbfmUrl){
+	public JSONObject biwibot(@FormDataParam("msg") String msg, @FormDataParam("channel") String orgaChannel, @FormDataParam("sbfmUrl") String sbfmUrl){
 		System.out.println("Msg:" + msg);
 		System.out.println("Channel:" + channel);
 		Boolean contextOn = false;
@@ -703,6 +703,7 @@ public class OpenAIService extends RESTService {
 		JSONObject chatResponse = new JSONObject();
 		JSONObject newEvent = new JSONObject();
 		JSONObject error = new JSONObject();
+		String channel = orgaChannel.split("-")[1];
 		if(!msg.equals("!exit")){
 			try {
 				new Thread(new Runnable() {
