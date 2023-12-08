@@ -678,7 +678,6 @@ public class OpenAIService extends RESTService {
 			value = "Get the chat response from biwibot",
 			notes = "Returns the chat response from biwibot")
 	public Response biwibot(@FormDataParam("msg") String msg, @FormDataParam("organization") String organization, @FormDataParam("channel") String channel, @FormDataParam("sbfmUrl") String sbfmUrl) throws ParseException, IOException {
-		System.out.println(isActive.get(channel));
 
 		if (isActive.getOrDefault(channel, false)) {
 			JSONObject err = new JSONObject();
@@ -690,7 +689,7 @@ public class OpenAIService extends RESTService {
 		isActive.put(channel, true);
 		String orgaChannel = organization + "-" + channel;
 		JSONObject response = biwibot(msg, orgaChannel, sbfmUrl);
-
+		System.out.println(response);
 		return Response.ok().entity(response.toString()).build();
 	}
 
@@ -707,6 +706,7 @@ public class OpenAIService extends RESTService {
 				new Thread(new Runnable() {
 					public void run() {
 						try {
+							System.out.println("Thread started.");
 							String question = msg;
 							chatResponse.put("channel", channel);
 							newEvent.put("question", question);
@@ -731,6 +731,7 @@ public class OpenAIService extends RESTService {
 								// Update chatResponse with the result from the POST request
 								chatResponse.appendField("AIResponse", response.body());
 								chatResponse.appendField("closeContext", contextOn);
+								System.out.println(chatResponse);
 								RESTcallBack(sbfmUrl, channel, chatResponse);
 							} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
 								// Handle unsuccessful response
