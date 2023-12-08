@@ -119,7 +119,7 @@ import java.nio.charset.StandardCharsets;
 @ServicePath("/openai")
 // TODO Your own service class
 public class OpenAIService extends RESTService {
-	private static HashMap<String, Boolean> isActive = null;
+	private static HashMap<String, Boolean> isActive = new HashMap<String, Boolean>();
 
 	EncodingRegistry registry = Encodings.newDefaultEncodingRegistry();
 	Encoding encoding = registry.getEncoding(EncodingType.CL100K_BASE);
