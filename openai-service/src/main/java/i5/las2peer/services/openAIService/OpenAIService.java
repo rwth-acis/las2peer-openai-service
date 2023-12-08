@@ -679,11 +679,13 @@ public class OpenAIService extends RESTService {
 			notes = "Returns the chat response from biwibot")
 	public Response biwibot(@FormDataParam("msg") String msg, @FormDataParam("organization") String organization, @FormDataParam("channel") String channel, @FormDataParam("sbfmUrl") String sbfmUrl) throws ParseException, IOException {
 
-		if (isActive.containsKey(channel) && isActive.getOrDefault(channel, false)) {
-			JSONObject err = new JSONObject();
-			err.put("errorMessage", "User: " + channel + " currently busy.");
-			err.put("error", true);
-			return Response.status(Status.NOT_FOUND).entity(err.toJSONString()).build();
+		if (isActive.containsKey(channel)) {
+			if(isActive.getOrDefault(channel, false)) {
+				JSONObject err = new JSONObject();
+				err.put("errorMessage", "User: " + channel + " currently busy.");
+				err.put("error", true);
+				return Response.status(Status.NOT_FOUND).entity(err.toJSONString()).build();
+			}
 		}
 
 		isActive.put(channel, true);
@@ -743,10 +745,12 @@ public class OpenAIService extends RESTService {
 						} catch ( IOException | InterruptedException e) {
 							e.printStackTrace();
 							error.appendField("error", "An error has occurred.");
+							isActive.put(channel, false);
 							RESTcallBack(sbfmUrl, channel, error);
 						} catch (Throwable e) {
 							e.printStackTrace();
 							error.appendField("error", "An unknown error has occurred.");
+							isActive.put(channel, false);
 							RESTcallBack(sbfmUrl, channel, error);
 						}
 					}
@@ -765,11 +769,14 @@ public class OpenAIService extends RESTService {
 		} else if (msg.equals("!exit")){
 			chatResponse.appendField("closeContext", contextOff);
 			chatResponse.appendField("AIResponse", "Exit AI Tutor");
+			isActive.put(channel, false);
 		} else if (msg.contains("!welcome")) {
 			chatResponse.appendField("AIResponse", "Nutze bitte das X, um zum Hauptmenü zu gelangen.");
 			chatResponse.appendField("closeContext", contextOff);
+			isActive.put(channel, false);
 		} else {
 			chatResponse.appendField("error", "Ich habe leider keine Nachricht bekommen.");
+			isActive.put(channel, false);
 		}
 		return chatResponse;
 	}
