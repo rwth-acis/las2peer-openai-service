@@ -689,7 +689,7 @@ public class OpenAIService extends RESTService {
 		}
 
 		isActive.put(channel, true);
-		String orgaChannel = organization + "-" + channel;
+		String orgaChannel = organization+"-"+channel;
 		JSONObject response = biwibot(msg, orgaChannel, sbfmUrl);
 		System.out.println(response);
 		return Response.ok().entity(response.toString()).build();
@@ -803,9 +803,21 @@ public class OpenAIService extends RESTService {
 
 	public void RESTcallBack(String callbackUrl, String channel, JSONObject body){
 		try {
+			String organization = null;
+			String channelpart = null;
+
+			System.out.println(channel);
 			String[] parts = channel.split("-");
-			String organization = parts[0];
-			String channelpart = parts[1];
+
+			if (parts.length>=2) {
+				organization = parts[0];
+				channelpart = parts[1];
+				System.out.println (organization + channel);
+			} else {
+				organization = "6";
+				channelpart = channel;
+			}
+			
 			System.out.println("Starting callback to botmanager with url: " + callbackUrl+ "/"+ organization + "/" + channelpart + "/" + "AsyncMessage");
 			Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
 			String mp = null;
