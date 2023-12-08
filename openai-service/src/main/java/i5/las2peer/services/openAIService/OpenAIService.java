@@ -697,7 +697,7 @@ public class OpenAIService extends RESTService {
 
 	public JSONObject biwibot(@FormDataParam("msg") String msg, @FormDataParam("channel") String orgaChannel, @FormDataParam("sbfmUrl") String sbfmUrl){
 		System.out.println("Msg:" + msg);
-		System.out.println("Channel:" + channel);
+		System.out.println("Channel:" + orgaChannel);
 		Boolean contextOn = false;
 		Boolean contextOff = true;
 		JSONObject chatResponse = new JSONObject();
