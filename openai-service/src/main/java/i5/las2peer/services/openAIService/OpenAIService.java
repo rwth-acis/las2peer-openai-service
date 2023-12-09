@@ -690,12 +690,24 @@ public class OpenAIService extends RESTService {
 
 		isActive.put(channel, true);
 		String orgaChannel = organization+"-"+channel;
-		JSONObject response = biwibot(msg, orgaChannel, sbfmUrl);
-		System.out.println(response);
+		Boolean responseBiwi = biwibot(msg, orgaChannel, sbfmUrl);
+		JSONObject response = new JSONObject();
+		if (responseBiwi){
+			response.appendField("AIResponse", "Bitte warte einen Moment ich denke darüber nach.");
+			response.appendField("channel", channel);
+			response.appendField("closeContext", false);
+			System.out.println(response);
+		} else {
+			response.appendField("AIResponse", "Etwas ist schief gelaufen, bitte benutze !exit um neuzustarten.");
+			response.appendField("channel", channel);
+			response.appendField("closeContext", true);
+		}
+		
 		return Response.ok().entity(response.toString()).build();
 	}
 
-	public JSONObject biwibot(@FormDataParam("msg") String msg, @FormDataParam("channel") String orgaChannel, @FormDataParam("sbfmUrl") String sbfmUrl){
+	public Boolean biwibot(@FormDataParam("msg") String msg, @FormDataParam("channel") String orgaChannel, @FormDataParam("sbfmUrl") String sbfmUrl){
+		Boolean biwistart = true;
 		System.out.println("Msg:" + msg);
 		System.out.println("Channel:" + orgaChannel);
 		Boolean contextOn = false;
@@ -759,13 +771,15 @@ public class OpenAIService extends RESTService {
 			} catch (Exception e) {
 				e.printStackTrace();
 				isActive.put(channel, false);
-				chatResponse.appendField("text","An error has occured (Exception).");
-				return chatResponse;
+				// chatResponse.appendField("text","An error has occured (Exception).");
+				biwistart=false;
+				return biwistart;
 			} catch (Throwable e) {
 				e.printStackTrace();
 				isActive.put(channel,false);
-				chatResponse.appendField("text", "An unknown error has occured.");
-				return chatResponse;
+				// chatResponse.appendField("text", "An unknown error has occured.");
+				biwistart=false;
+				return biwistart;
 			}
 		} else if (msg.equals("!exit")){
 			chatResponse.appendField("closeContext", contextOff);
@@ -779,7 +793,7 @@ public class OpenAIService extends RESTService {
 			chatResponse.appendField("error", "Ich habe leider keine Nachricht bekommen.");
 			isActive.put(channel, false);
 		}
-		return chatResponse;
+		return biwistart;
 	}
 
 	public void callBack(String callbackUrl, String channel, JSONObject body, String email){
