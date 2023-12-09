@@ -678,9 +678,9 @@ public class OpenAIService extends RESTService {
 			value = "Get the chat response from biwibot",
 			notes = "Returns the chat response from biwibot")
 	public Response biwibot(@FormDataParam("msg") String msg, @FormDataParam("organization") String organization, @FormDataParam("channel") String channel, @FormDataParam("sbfmUrl") String sbfmUrl) throws ParseException, IOException {
-
-		if (isActive.containsKey(channel)) {
-			if(isActive.getOrDefault(channel, false)) {
+		String orgaChannel = organization + "-" + channel;
+		if (isActive.containsKey(orgaChannel)) {
+			if(isActive.getOrDefault(orgaChannel, false)) {
 				JSONObject err = new JSONObject();
 				err.put("errorMessage", "User: " + channel + " currently busy.");
 				err.put("error", true);
@@ -689,7 +689,6 @@ public class OpenAIService extends RESTService {
 		}
 
 		isActive.put(channel, true);
-		String orgaChannel = organization+"-"+channel;
 		Boolean responseBiwi = biwibot(msg, orgaChannel, sbfmUrl);
 		JSONObject response = new JSONObject();
 		if (responseBiwi){
