@@ -715,7 +715,7 @@ public class OpenAIService extends RESTService {
 		JSONObject chatResponse = new JSONObject();
 		JSONObject newEvent = new JSONObject();
 		JSONObject error = new JSONObject();
-		String channel = orgaChannel.split("-")[1];
+		String channel = orgaChannel;
 		if(!msg.equals("!exit")){
 			try {
 				new Thread(new Runnable() {
