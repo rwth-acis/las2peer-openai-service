@@ -667,7 +667,7 @@ public class OpenAIService extends RESTService {
 	// }
 
 	@POST
-	@Path("/biwibotWithoutCallback")
+	@Path("/biwitest")
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiResponses(
 		value = { 
@@ -677,7 +677,7 @@ public class OpenAIService extends RESTService {
 	@ApiOperation(
 			value = "Get the chat response from biwibot",
 			notes = "Returns the chat response from biwibot")
-	public Response biwibot(@FormDataParam("msg") String msg, @FormDataParam("channel") String channel) {
+	public Response biwitest(@FormDataParam("msg") String msg, @FormDataParam("channel") String channel) {
 		System.out.println("Msg:" + msg);
 		System.out.println("Channel:" + channel);
 		Boolean contextOn = false;
