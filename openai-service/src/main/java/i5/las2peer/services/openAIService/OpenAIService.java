@@ -667,6 +667,76 @@ public class OpenAIService extends RESTService {
 	// }
 
 	@POST
+	@Path("/biwibotWithoutCallback")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiResponses(
+		value = { 
+				@ApiResponse(
+					code = HttpURLConnection.HTTP_OK,
+					message = "Connected.")})
+	@ApiOperation(
+			value = "Get the chat response from biwibot",
+			notes = "Returns the chat response from biwibot")
+	public Response biwibot(@FormDataParam("msg") String msg, @FormDataParam("channel") String channel) {
+		System.out.println("Msg:" + msg);
+		System.out.println("Channel:" + channel);
+		Boolean contextOn = false;
+		Boolean contextOff = true;
+		JSONObject chatResponse = new JSONObject();
+		JSONObject newEvent = new JSONObject();
+		String question = null;
+		
+		if(!msg.equals("!exit")){
+			try {
+				question = msg;
+				chatResponse.put("channel", channel);
+				newEvent.put("question", question);
+				newEvent.put("channel", channel);
+				System.out.print(newEvent);
+				// Make the POST request to localhost:5000/chat
+				String url = "https://biwibot.tech4comp.dbis.rwth-aachen.de/generate_response";
+				HttpClient httpClient = HttpClient.newHttpClient();
+				HttpRequest httpRequest = HttpRequest.newBuilder()
+						.uri(UriBuilder.fromUri(url).build())
+						.header("Content-Type", "application/json")
+						.POST(HttpRequest.BodyPublishers.ofString(newEvent.toJSONString()))
+						.build();
+				// Send the request
+				HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+				int responseCode = response.statusCode();
+				if (responseCode == HttpURLConnection.HTTP_OK) {
+					System.out.println("Response from service: " + response.body());
+					
+					// Update chatResponse with the result from the POST request
+					chatResponse.appendField("AIResponse", response.body());
+					chatResponse.appendField("closeContext", contextOn);
+				} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
+					// Handle unsuccessful response
+					chatResponse.appendField("AIResponse", "An error has occurred.");
+					chatResponse.appendField("AIResponse", "Biwibot error has occured.");
+				}
+				//System.out.println(chatResponse);
+			} catch ( IOException | InterruptedException e) {
+				e.printStackTrace();
+				chatResponse.appendField("AIResponse", "An error has occurred.");
+			} catch (Throwable e) {
+				e.printStackTrace();
+				chatResponse.appendField("AIResponse", "An unknown error has occurred.");
+			}
+		} else if (msg.equals("!exit")){
+			chatResponse.appendField("closeContext", contextOff);
+			chatResponse.appendField("AIResponse", "Exit AI Tutor");
+		} else if (msg.contains("!welcome")) {
+			chatResponse.appendField("AIResponse", "Nutze bitte das X, um zum Hauptmenü zu gelangen.");
+			chatResponse.appendField("closeContext", contextOff);
+		} else {
+			chatResponse.appendField("AIResponse", "Ich habe leider keine Nachricht bekommen.");
+		}
+		
+		return Response.ok().entity(chatResponse.toString()).build();
+	}
+
+	@POST
 	@Path("/biwibot")
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiResponses(
