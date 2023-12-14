@@ -686,6 +686,11 @@ public class OpenAIService extends RESTService {
 		JSONObject newEvent = new JSONObject();
 		String question = null;
 		
+		if (msg.contains("!welcome")) {
+			chatResponse.appendField("AIResponse", "Nutze bitte das X, um zum Hauptmenü zu gelangen.");
+			chatResponse.appendField("closeContext", contextOff);
+		}
+
 		if(!msg.equals("!exit")){
 			try {
 				question = msg;
@@ -726,9 +731,6 @@ public class OpenAIService extends RESTService {
 		} else if (msg.equals("!exit")){
 			chatResponse.appendField("closeContext", contextOff);
 			chatResponse.appendField("AIResponse", "Exit AI Tutor");
-		} else if (msg.contains("!welcome")) {
-			chatResponse.appendField("AIResponse", "Nutze bitte das X, um zum Hauptmenü zu gelangen.");
-			chatResponse.appendField("closeContext", contextOff);
 		} else {
 			chatResponse.appendField("AIResponse", "Ich habe leider keine Nachricht bekommen.");
 		}
