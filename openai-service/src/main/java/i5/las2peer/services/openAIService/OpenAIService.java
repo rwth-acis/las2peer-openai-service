@@ -776,7 +776,7 @@ public class OpenAIService extends RESTService {
 
 			return Response.ok().entity(response.toString()).build();
 
-		} else if (msg == ("!welcome")) {
+		} else if (msg.contains("!welcome")) {
 			exit.appendField("message", "!exit");
 			RESTcallBack(sbfmUrl, channel, exit);
 			response.appendField("AIResponse", "Nutze bitte das X, um zum Hauptmenü zu gelangen.");
