@@ -685,10 +685,12 @@ public class OpenAIService extends RESTService {
 		JSONObject chatResponse = new JSONObject();
 		JSONObject newEvent = new JSONObject();
 		String question = null;
-		
+
 		if (msg.contains("!welcome")) {
 			chatResponse.appendField("AIResponse", "Nutze bitte das X, um zum Hauptmenü zu gelangen.");
 			chatResponse.appendField("closeContext", contextOff);
+			
+			return Response.ok().entity(chatResponse.toString()).build();
 		}
 
 		if(!msg.equals("!exit")){
