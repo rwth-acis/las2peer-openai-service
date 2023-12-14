@@ -760,6 +760,14 @@ public class OpenAIService extends RESTService {
 		JSONObject response = new JSONObject();
 		JSONObject exit = new JSONObject();
 
+		if (msg.contains("!welcome")) {
+			exit.appendField("message", "!exit");
+			RESTcallBack(sbfmUrl, channel, exit);
+			response.appendField("AIResponse", "Nutze bitte das X, um zum Hauptmenü zu gelangen.");
+			response.appendField("closeContext", true);
+			return Response.ok().entity(response.toString()).build();
+		}
+
 		if (msg != "!exit"){
 			isActive.put(channel, true);
 			Boolean responseBiwi = biwibot(msg, orgaChannel, sbfmUrl);
@@ -775,26 +783,14 @@ public class OpenAIService extends RESTService {
 			}
 
 			return Response.ok().entity(response.toString()).build();
-
-		} else if (msg.contains("!welcome")) {
-			exit.appendField("message", "!exit");
-			RESTcallBack(sbfmUrl, channel, exit);
-			response.appendField("AIResponse", "Nutze bitte das X, um zum Hauptmenü zu gelangen.");
-			response.appendField("closeContext", true);
-			return Response.ok().entity(response.toString()).build();
-		} else if (msg == "!exit") {
+		} else {
 			exit.appendField("message", "!exit");
 			RESTcallBack(sbfmUrl, channel, exit);
 			response.appendField("AIResponse", "Exit wird ausgeführt.");
 			response.appendField("closeContext", true);
 			return Response.ok().entity(response.toString()).build();
-		} else {
-			exit.appendField("message", "!exit");
-			RESTcallBack(sbfmUrl, channel, exit);
-			response.appendField("AIResponse", "Etwas ist schief gelaufen.");
-			response.appendField("closeContext", true);
-			return Response.ok().entity(response.toString()).build();
-		}
+		} 
+
 	}
 
 	public Boolean biwibot(@FormDataParam("msg") String msg, @FormDataParam("channel") String orgaChannel, @FormDataParam("sbfmUrl") String sbfmUrl){
