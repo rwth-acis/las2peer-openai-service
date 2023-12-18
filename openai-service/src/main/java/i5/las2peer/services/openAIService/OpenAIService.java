@@ -667,7 +667,7 @@ public class OpenAIService extends RESTService {
 	// }
 
 	@POST
-	@Path("/biwitest")
+	@Path("/biwibot")
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiResponses(
 		value = { 
@@ -677,7 +677,7 @@ public class OpenAIService extends RESTService {
 	@ApiOperation(
 			value = "Get the chat response from biwibot",
 			notes = "Returns the chat response from biwibot")
-	public Response biwitest(@FormDataParam("msg") String msg, @FormDataParam("channel") String channel) {
+	public Response biwibot(@FormDataParam("msg") String msg, @FormDataParam("channel") String channel) {
 		System.out.println("Msg:" + msg);
 		System.out.println("Channel:" + channel);
 		Boolean contextOn = false;
@@ -741,7 +741,7 @@ public class OpenAIService extends RESTService {
 	}
 
 	@POST
-	@Path("/biwibot")
+	@Path("/biwibot/Async")
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiResponses(
 		value = { 
@@ -751,7 +751,7 @@ public class OpenAIService extends RESTService {
 	@ApiOperation(
 			value = "Get the chat response from biwibot",
 			notes = "Returns the chat response from biwibot")
-	public Response biwibot(@FormDataParam("msg") String msg, @FormDataParam("organization") String organization, @FormDataParam("channel") String channel, @FormDataParam("sbfmUrl") String sbfmUrl) throws ParseException, IOException {
+	public Response biwibotAsync(@FormDataParam("msg") String msg, @FormDataParam("organization") String organization, @FormDataParam("channel") String channel, @FormDataParam("sbfmUrl") String sbfmUrl) throws ParseException, IOException {
 		String orgaChannel = organization + "-" + channel;
 		if (isActive.containsKey(orgaChannel)) {
 			if(isActive.getOrDefault(orgaChannel, false)) {
