@@ -741,7 +741,7 @@ public class OpenAIService extends RESTService {
 	}
 
 	@POST
-	@Path("/biwibot/Async")
+	@Path("/biwibotAsync")
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiResponses(
 		value = { 
