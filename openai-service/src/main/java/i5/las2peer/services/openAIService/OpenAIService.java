@@ -898,13 +898,13 @@ public class OpenAIService extends RESTService {
 		try {
 			String organization = orgaChannel.split("-")[0];
 			String channel = orgaChannel.split("-")[1];
-			System.out.println("Starting callback to botmanager with url: " + callbackUrl+ "/"+ organization + "/" + channel + "/" + "AsyncMessage");
+			System.out.println("Starting callback to botmanager with url: " + callbackUrl+ "/"+ organization + "/" + channel );
 			Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
 			String mp = null;
 			System.out.println(body);
 			mp = body.toJSONString();
 			WebTarget target = textClient
-					.target(callbackUrl + "/" + organization + "/" + channel + "/" + "AsyncMessage");
+					.target(callbackUrl + "/" + organization + "/" + channel);
 			Response response = target.request()
 					.post(javax.ws.rs.client.Entity.entity(mp, MediaType.APPLICATION_JSON));
 					String test = response.readEntity(String.class);
