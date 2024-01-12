@@ -678,7 +678,7 @@ public class OpenAIService extends RESTService {
 	@ApiOperation(
 			value = "Get the chat response from biwibot",
 			notes = "Returns the chat response from biwibot")
-	public Response biwibot(@FormDataParam("msg") String msg, @FormDataParam("channel") String channel, @FormDataParam("sbfmUrl") @DefaultValue("null") String sbfmUrl) {
+	public Response biwibot(@FormDataParam("msg") String msg, @FormDataParam("channel") String channel, @FormDataParam("sbfmUrl") @DefaultValue("default") String sbfmUrl) {
 		System.out.println("Msg:" + msg);
 		System.out.println("Channel:" + channel);
 		Boolean contextOn = false;
@@ -687,7 +687,8 @@ public class OpenAIService extends RESTService {
 		JSONObject newEvent = new JSONObject();
 		String question = null;
 		
-		if (sbfmUrl != "null") {
+		if (sbfmUrl != "default") {
+			System.out.println(sbfmUrl);
 			String orgaChannel = channel;
 			if (isActive.containsKey(orgaChannel)) {
 				if(isActive.getOrDefault(orgaChannel, false)) {
@@ -730,6 +731,7 @@ public class OpenAIService extends RESTService {
 				response.appendField("closeContext", true);
 				return Response.ok().entity(response.toString()).build();
 			}
+			
 		} else {
 
 			if (msg.contains("!welcome")) {
