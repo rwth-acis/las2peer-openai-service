@@ -687,7 +687,7 @@ public class OpenAIService extends RESTService {
 		JSONObject newEvent = new JSONObject();
 		String question = null;
 		
-		if (sbfmUrl != "default") {
+		if (!sbfmUrl.equals("default")) {
 			System.out.println(sbfmUrl);
 			String orgaChannel = channel;
 			if (isActive.containsKey(orgaChannel)) {
@@ -731,7 +731,7 @@ public class OpenAIService extends RESTService {
 				response.appendField("closeContext", true);
 				return Response.ok().entity(response.toString()).build();
 			}
-			
+
 		} else {
 
 			if (msg.contains("!welcome")) {
