@@ -709,7 +709,7 @@ public class OpenAIService extends RESTService {
 				return Response.ok().entity(response.toString()).build();
 			}
 
-			if (msg != "!exit"){
+			if (!msg.startsWith("!")){
 				isActive.put(channel, true);
 				Boolean responseBiwi = biwibotAsync(msg, orgaChannel, sbfmUrl);
 				if (responseBiwi){
