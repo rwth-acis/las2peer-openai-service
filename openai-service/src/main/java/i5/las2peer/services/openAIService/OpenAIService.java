@@ -700,10 +700,10 @@ public class OpenAIService extends RESTService {
 			}
 			JSONObject response = new JSONObject();
 			JSONObject exit = new JSONObject();
-
+			exit.appendField("channel", channel);
 			if (msg.contains("!welcome")) {
 				exit.appendField("message", "!exit");
-				RESTcallBack(sbfmUrl, channel, exit);
+				RESTcallBack(sbfmUrl, exit);
 				response.appendField("AIResponse", "Nutze bitte das X, um zum Hauptmenü zu gelangen.");
 				response.appendField("closeContext", true);
 				return Response.ok().entity(response.toString()).build();
@@ -726,7 +726,7 @@ public class OpenAIService extends RESTService {
 				return Response.ok().entity(response.toString()).build();
 			} else {
 				exit.appendField("message", "!exit");
-				RESTcallBack(sbfmUrl, channel, exit);
+				RESTcallBack(sbfmUrl, exit);
 				response.appendField("AIResponse", "Exit wird ausgeführt.");
 				response.appendField("closeContext", true);
 				return Response.ok().entity(response.toString()).build();
@@ -851,7 +851,6 @@ public class OpenAIService extends RESTService {
 		System.out.println("Msg:" + msg);
 		System.out.println("Channel:" + orgaChannel);
 		Boolean contextOn = false;
-		Boolean contextOff = true;
 		JSONObject chatResponse = new JSONObject();
 		JSONObject newEvent = new JSONObject();
 		JSONObject error = new JSONObject();
@@ -863,6 +862,7 @@ public class OpenAIService extends RESTService {
 						System.out.println("Thread started.");
 						String question = msg;
 						chatResponse.put("channel", channel);
+						error.put("channel", channel);
 						newEvent.put("question", question);
 						newEvent.put("channel", channel);
 						System.out.print(newEvent);
@@ -886,11 +886,11 @@ public class OpenAIService extends RESTService {
 							chatResponse.appendField("AIResponse", response.body());
 							chatResponse.appendField("closeContext", contextOn);
 							System.out.println(chatResponse);
-							RESTcallBack(sbfmUrl, channel, chatResponse);
+							RESTcallBack(sbfmUrl, chatResponse);
 						} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
 							// Handle unsuccessful response
 							error.appendField("error", "Biwibot error has occured.");
-							RESTcallBack(sbfmUrl, channel, error);
+							RESTcallBack(sbfmUrl, error);
 						}
 						//System.out.println(chatResponse);
 						isActive.put(channel, false);
@@ -898,12 +898,12 @@ public class OpenAIService extends RESTService {
 						e.printStackTrace();
 						error.appendField("error", "An error has occurred.");
 						isActive.put(channel, false);
-						RESTcallBack(sbfmUrl, channel, error);
+						RESTcallBack(sbfmUrl, error);
 					} catch (Throwable e) {
 						e.printStackTrace();
 						error.appendField("error", "An unknown error has occurred.");
 						isActive.put(channel, false);
-						RESTcallBack(sbfmUrl, channel, error);
+						RESTcallBack(sbfmUrl, error);
 					}
 				}
 			}).start();
@@ -943,17 +943,15 @@ public class OpenAIService extends RESTService {
 		}
 	}
 
-	public void RESTcallBack(String callbackUrl, String orgaChannel, JSONObject body){
+	public void RESTcallBack(String callbackUrl, JSONObject body){
 		try {
-			String organization = orgaChannel.split("-")[0];
-			String channel = orgaChannel.split("-")[1];
-			System.out.println("Starting callback to botmanager with url: " + callbackUrl+ "/"+ organization + "/" + channel );
+			System.out.println("Starting callback to botmanager with url: " + callbackUrl);
 			Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
 			String mp = null;
 			System.out.println(body);
 			mp = body.toJSONString();
 			WebTarget target = textClient
-					.target(callbackUrl + "/" + organization + "/" + channel);
+					.target(callbackUrl);
 			Response response = target.request()
 					.post(javax.ws.rs.client.Entity.entity(mp, MediaType.APPLICATION_JSON));
 					String test = response.readEntity(String.class);
