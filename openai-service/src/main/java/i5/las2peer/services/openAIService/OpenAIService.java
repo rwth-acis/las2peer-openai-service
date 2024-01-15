@@ -726,6 +726,7 @@ public class OpenAIService extends RESTService {
 				return Response.ok().entity(response.toString()).build();
 			} else {
 				exit.appendField("message", "!exit");
+				exit.appendField("closeContext", true);
 				RESTcallBack(sbfmUrl, exit);
 				response.appendField("AIResponse", "Exit wird ausgeführt.");
 				response.appendField("closeContext", true);
@@ -945,13 +946,14 @@ public class OpenAIService extends RESTService {
 
 	public void RESTcallBack(String callbackUrl, JSONObject body){
 		try {
-			System.out.println("Starting callback to botmanager with url: " + callbackUrl);
+			System.out.println("Starting callback to botmanager with url: " + callbackUrl + "/AsyncMessage");
 			Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
 			String mp = null;
 			System.out.println(body);
 			mp = body.toJSONString();
 			WebTarget target = textClient
-					.target(callbackUrl);
+					.target(callbackUrl
+					+ "/AsyncMessage");
 			Response response = target.request()
 					.post(javax.ws.rs.client.Entity.entity(mp, MediaType.APPLICATION_JSON));
 					String test = response.readEntity(String.class);
