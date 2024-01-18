@@ -737,16 +737,14 @@ public class OpenAIService extends RESTService {
 
 				ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-				ScheduledFuture<?> scheduledFuture = scheduler.scheduleAtFixedRate(() -> {
+				scheduler.scheduleAtFixedRate(() -> {
 					RESTcallBack(sbfmUrl, response);
+					if (responseBiwi) {
+						response.clear();
+						responseBiwi =false;
+						scheduler.shutdown();
+					}
 				}, 0, 20, TimeUnit.SECONDS);
-
-				scheduler.schedule(() -> {
-					scheduledFuture.cancel(true);
-					response.clear();
-					responseBiwi = false;
-					scheduler.shutdown();
-				}, 1, TimeUnit.MINUTES);
 
 				return Response.ok().entity(response.toString()).build();
 			} else {
