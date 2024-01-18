@@ -28,6 +28,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import org.apache.commons.io.IOUtils;
 import javax.imageio.ImageIO;
@@ -54,6 +58,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.java_websocket.util.Base64;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.knuddels.jtokkit.Encodings;
 import com.knuddels.jtokkit.api.Encoding;
 import com.knuddels.jtokkit.api.EncodingRegistry;
@@ -666,6 +671,7 @@ public class OpenAIService extends RESTService {
 	// 	}
 		
 	// }
+	private Boolean responseBiwi = false;
 
 	@POST
 	@Path("/biwibot")
@@ -686,10 +692,13 @@ public class OpenAIService extends RESTService {
 		JSONObject chatResponse = new JSONObject();
 		JSONObject newEvent = new JSONObject();
 		String question = null;
+		String orgaChannel = channel;
+		JSONObject response = new JSONObject();
+		JSONObject exit = new JSONObject();
 		
 		if (!sbfmUrl.equals("default")) {
 			System.out.println(sbfmUrl);
-			String orgaChannel = channel;
+
 			if (isActive.containsKey(orgaChannel)) {
 				if(isActive.getOrDefault(orgaChannel, false)) {
 					JSONObject err = new JSONObject();
@@ -698,8 +707,7 @@ public class OpenAIService extends RESTService {
 					return Response.status(Status.NOT_FOUND).entity(err.toJSONString()).build();
 				}
 			}
-			JSONObject response = new JSONObject();
-			JSONObject exit = new JSONObject();
+			
 			exit.appendField("channel", channel);
 			if (msg.contains("!welcome")) {
 				exit.appendField("message", "!exit");
@@ -711,16 +719,33 @@ public class OpenAIService extends RESTService {
 
 			if (!msg.startsWith("!")){
 				isActive.put(channel, true);
-				Boolean responseBiwi = biwibotAsync(msg, orgaChannel, sbfmUrl);
-				if (responseBiwi){
+				long start = System.currentTimeMillis();
+				biwibotAsync(msg, orgaChannel, sbfmUrl);
+				while (responseBiwi == false) {
 					response.appendField("AIResponse", "Bitte warte einen Moment ich denke darüber nach.");
 					response.appendField("channel", channel);
 					response.appendField("closeContext", false);
-					System.out.println(response);
-				} else {
-					response.appendField("AIResponse", "Etwas ist schief gelaufen, bitte benutze !exit um neuzustarten.");
-					response.appendField("channel", channel);
-					response.appendField("closeContext", true);
+
+					ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+					ScheduledFuture<?> scheduledFuture = scheduler.scheduleAtFixedRate(() -> {
+						RESTcallBack(sbfmUrl, response);
+					}, 0, 20, TimeUnit.SECONDS);
+
+					scheduler.schedule(() -> {
+						scheduledFuture.cancel(true);
+						scheduler.shutdown();
+					}, 2, TimeUnit.MINUTES);
+
+					long finish = System.currentTimeMillis();
+					long duration = finish - start;
+					System.out.println(duration);
+					if (duration > 300) {
+						response.appendField("AIResponse", "Etwas ist schief gelaufen.");
+						response.appendField("channel", channel);
+						response.appendField("closeContext", false);
+						break;
+					}
 				}
 
 				return Response.ok().entity(response.toString()).build();
@@ -758,13 +783,13 @@ public class OpenAIService extends RESTService {
 							.POST(HttpRequest.BodyPublishers.ofString(newEvent.toJSONString()))
 							.build();
 					// Send the request
-					HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-					int responseCode = response.statusCode();
+					HttpResponse<String> respond = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+					int responseCode = respond.statusCode();
 					if (responseCode == HttpURLConnection.HTTP_OK) {
-						System.out.println("Response from service: " + response.body());
+						System.out.println("Response from service: " + respond.body());
 						
 						// Update chatResponse with the result from the POST request
-						chatResponse.appendField("AIResponse", response.body());
+						chatResponse.appendField("AIResponse", respond.body());
 						chatResponse.appendField("closeContext", contextOn);
 					} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
 						// Handle unsuccessful response
@@ -847,8 +872,7 @@ public class OpenAIService extends RESTService {
 
 	// }
 
-	public Boolean biwibotAsync(@FormDataParam("msg") String msg, @FormDataParam("channel") String orgaChannel, @FormDataParam("sbfmUrl") String sbfmUrl){
-		Boolean biwistart = true;
+	public void biwibotAsync(@FormDataParam("msg") String msg, @FormDataParam("channel") String orgaChannel, @FormDataParam("sbfmUrl") String sbfmUrl){
 		System.out.println("Msg:" + msg);
 		System.out.println("Channel:" + orgaChannel);
 		Boolean contextOn = false;
@@ -881,6 +905,7 @@ public class OpenAIService extends RESTService {
 						int responseCode = response.statusCode();
 
 						if (responseCode == HttpURLConnection.HTTP_OK) {
+							responseBiwi = true;
 							System.out.println("Response from service: " + response.body());
 							
 							// Update chatResponse with the result from the POST request
@@ -889,6 +914,7 @@ public class OpenAIService extends RESTService {
 							System.out.println(chatResponse);
 							RESTcallBack(sbfmUrl, chatResponse);
 						} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
+							responseBiwi = true;
 							// Handle unsuccessful response
 							error.appendField("error", "Biwibot error has occured.");
 							RESTcallBack(sbfmUrl, error);
@@ -896,11 +922,13 @@ public class OpenAIService extends RESTService {
 						//System.out.println(chatResponse);
 						isActive.put(channel, false);
 					} catch ( IOException | InterruptedException e) {
+						responseBiwi = true;
 						e.printStackTrace();
 						error.appendField("error", "An error has occurred.");
 						isActive.put(channel, false);
 						RESTcallBack(sbfmUrl, error);
 					} catch (Throwable e) {
+						responseBiwi = true;
 						e.printStackTrace();
 						error.appendField("error", "An unknown error has occurred.");
 						isActive.put(channel, false);
@@ -912,17 +940,15 @@ public class OpenAIService extends RESTService {
 			e.printStackTrace();
 			isActive.put(channel, false);
 			// chatResponse.appendField("text","An error has occured (Exception).");
-			biwistart=false;
-			return biwistart;
+			return;
 		} catch (Throwable e) {
 			e.printStackTrace();
 			isActive.put(channel,false);
 			// chatResponse.appendField("text", "An unknown error has occured.");
-			biwistart=false;
-			return biwistart;
+			return;
 		}
 
-		return biwistart;
+		return;
 	}
 
 	public void callBack(String callbackUrl, String channel, JSONObject body, String email){
