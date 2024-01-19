@@ -696,7 +696,8 @@ public class OpenAIService extends RESTService {
 		String orgaChannel = channel;
 		// JSONObject response = new JSONObject();
 		JSONObject exit = new JSONObject();
-		
+		exit.appendField("channel", channel);
+
 		if (!sbfmUrl.equals("default")) {
 			System.out.println(sbfmUrl);
 
@@ -709,8 +710,8 @@ public class OpenAIService extends RESTService {
 				}
 			}
 			
-			exit.appendField("channel", channel);
 			if (msg.contains("!welcome")) {
+				
 				exit.appendField("message", "!exit");
 				RESTcallBack(sbfmUrl, exit);
 				response.appendField("AIResponse", "Nutze bitte das X, um zum Hauptmenü zu gelangen.");
@@ -729,22 +730,22 @@ public class OpenAIService extends RESTService {
 					Thread.currentThread().interrupt();
 				}
 
+				ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
 				if (!responseBiwi) {
 					response.appendField("AIResponse", "Bitte warte einen Moment ich denke darüber nach.");
 					response.appendField("channel", channel);
 					response.appendField("closeContext", false);
+
+					scheduler.scheduleAtFixedRate(() -> {
+						RESTcallBack(sbfmUrl, response);
+						if (responseBiwi) {
+							response.clear();
+							responseBiwi=false;
+							scheduler.shutdown();
+						}
+					}, 0, 20, TimeUnit.SECONDS);
 				}
-
-				ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-
-				scheduler.scheduleAtFixedRate(() -> {
-					RESTcallBack(sbfmUrl, response);
-					if (responseBiwi) {
-						response.clear();
-						responseBiwi =false;
-						scheduler.shutdown();
-					}
-				}, 0, 20, TimeUnit.SECONDS);
 
 				return Response.ok().entity(response.toString()).build();
 			} else {
