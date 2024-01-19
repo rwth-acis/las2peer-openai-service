@@ -724,11 +724,11 @@ public class OpenAIService extends RESTService {
 
 				biwibotAsync(msg, orgaChannel, sbfmUrl);
 
-				try {
-					TimeUnit.SECONDS.sleep(10);
-				} catch (InterruptedException ie) {
-					Thread.currentThread().interrupt();
-				}
+				// try {
+				// 	TimeUnit.SECONDS.sleep(10);
+				// } catch (InterruptedException ie) {
+				// 	Thread.currentThread().interrupt();
+				// }
 
 				ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
