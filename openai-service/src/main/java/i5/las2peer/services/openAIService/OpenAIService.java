@@ -576,101 +576,6 @@ public class OpenAIService extends RESTService {
 		return Response.ok().entity(chatResponse).build();
 	}
 
-	// @POST
-	// @Path("/biwibottest")
-	// @Produces(MediaType.APPLICATION_JSON)
-	// @ApiResponses(
-	// 	value = { 
-	// 			@ApiResponse(
-	// 				code = HttpURLConnection.HTTP_OK,
-	// 				message = "Connected.")})
-	// @ApiOperation(
-	// 		value = "Get the chat response from biwibot",
-	// 		notes = "Returns the chat response from biwibot")
-	// public Response biwibottest(String body) throws ParseException {
-	// 	// String body is possible because of Rocket.Chat Message Handler
-	// 	JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-    //     JSONObject json = new JSONObject();
-	// 	Boolean contextOn = false;
-	// 	// Boolean contextOff = true;
-	// 	JSONObject chatResponse = new JSONObject();
-	// 	JSONObject newEvent = new JSONObject();
-	// 	String callbackUrl = "https://git.tech4comp.dbis.rwth-aachen.de/SBFManager";
-	// 	json = (JSONObject) p.parse(body);
-	// 	System.out.println(json.toJSONString());
-	// 	String question = json.getAsString("msg");
-	// 	String channel = json.getAsString("channel");
-	// 	String email = json.getAsString("email");
-	// 	if (isActive == null) {
-	// 		isActive = new HashMap<String, Boolean>();
-	// 	}
-	// 	isActive.put(channel, true);
-	// 	chatResponse.put("channel", channel);
-	// 	newEvent.put("question", question);
-	// 	newEvent.put("channel", channel);
-	// 	System.out.println(newEvent);
-
-	// 	try {
-	// 		new Thread(new Runnable() {
-	// 			public void run() {
-	// 				try {
-	// 					// Make the POST request to localhost:5000/chat
-	// 					String url = "https://biwibot.tech4comp.dbis.rwth-aachen.de/generate_response";
-	// 					HttpClient httpClient = HttpClient.newHttpClient();
-	// 					HttpRequest httpRequest = HttpRequest.newBuilder()
-	// 							.uri(UriBuilder.fromUri(url).build())
-	// 							.header("Content-Type", "application/json")
-	// 							.POST(HttpRequest.BodyPublishers.ofString(newEvent.toJSONString()))
-	// 							.build();
-
-	// 					// Send the request
-	// 					long starttime = System.currentTimeMillis();
-	// 					HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-	// 					long end = System.currentTimeMillis();
-	// 					long duration = end - starttime;
-	// 					System.out.println("Duration of HttpResponse: " + Long.toString(duration));
-	// 					int responseCode = response.statusCode();
-
-	// 					if (responseCode == HttpURLConnection.HTTP_OK) {
-	// 						System.out.println("Response from service: " + response.body());
-							
-	// 						// Update chatResponse with the result from the POST request
-	// 						chatResponse.appendField("msg", response.body());
-	// 						chatResponse.appendField("closeContext", contextOn);
-	// 					} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
-	// 						// Handle unsuccessful response
-	// 						chatResponse.appendField("msg", "Biwibot error has occured.");
-	// 						chatResponse.appendField("closeContext", contextOn);
-	// 					}
-
-	// 					callBack(callbackUrl, channel , chatResponse, email);
-	// 					isActive.put(channel, false);
-	// 				} catch ( IOException | InterruptedException e) {
-	// 					e.printStackTrace();
-	// 					chatResponse.appendField("msg", "An error has occurred.");
-	// 					callBack(callbackUrl, channel, chatResponse, email);
-	// 				} catch (Throwable e) {
-	// 					e.printStackTrace();
-	// 					chatResponse.appendField("msg", "An unknown error has occurred.");
-	// 					callBack(callbackUrl, channel, chatResponse, email);
-	// 				}
-	// 			}
-	// 		}).start();
-	// 		return Response.ok().entity(chatResponse.toString()).build();
-
-	// 	} catch (Exception e) {
-	// 		e.printStackTrace();
-	// 		isActive.put(channel, false);
-	// 		chatResponse.appendField("text","An error has occured (Exception).");
-	// 		return Response.ok().entity(chatResponse.toString()).build();
-	// 	} catch (Throwable e) {
-	// 		e.printStackTrace();
-	// 		isActive.put(channel,false);
-	// 		chatResponse.appendField("text", "An unknown error has occured.");
-	// 		return Response.ok().entity(chatResponse.toString()).build();
-	// 	}
-		
-	// }
 	private Boolean responseBiwi = false;
 	private JSONObject response = new JSONObject();
 
@@ -703,10 +608,9 @@ public class OpenAIService extends RESTService {
 
 			if (isActive.containsKey(orgaChannel)) {
 				if(isActive.getOrDefault(orgaChannel, false)) {
-					JSONObject err = new JSONObject();
-					err.put("errorMessage", "User: " + channel + " currently busy.");
-					err.put("error", true);
-					return Response.status(Status.NOT_FOUND).entity(err.toJSONString()).build();
+					response.put("AIResponse", "Einen Moment bitte, ich verarbeit noch deine erste Nachricht.");
+					response.put("closeContext", false);
+					return Response.ok().entity(response.toJSONString()).build();
 				}
 			}
 			
@@ -723,12 +627,6 @@ public class OpenAIService extends RESTService {
 				isActive.put(channel, true);
 
 				biwibotAsync(msg, orgaChannel, sbfmUrl);
-
-				// try {
-				// 	TimeUnit.SECONDS.sleep(10);
-				// } catch (InterruptedException ie) {
-				// 	Thread.currentThread().interrupt();
-				// }
 
 				ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
