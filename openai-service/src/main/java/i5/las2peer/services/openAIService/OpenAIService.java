@@ -28,16 +28,24 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import org.apache.commons.io.IOUtils;
 import javax.imageio.ImageIO;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import java.nio.file.Paths;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -45,9 +53,12 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.java_websocket.util.Base64;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.knuddels.jtokkit.Encodings;
 import com.knuddels.jtokkit.api.Encoding;
 import com.knuddels.jtokkit.api.EncodingRegistry;
@@ -114,10 +125,11 @@ import java.nio.charset.StandardCharsets;
 @ServicePath("/openai")
 // TODO Your own service class
 public class OpenAIService extends RESTService {
-	
+	private static HashMap<String, Boolean> isActive = new HashMap<String, Boolean>();
+
 	EncodingRegistry registry = Encodings.newDefaultEncodingRegistry();
 	Encoding encoding = registry.getEncoding(EncodingType.CL100K_BASE);
-	
+
 	/*
 	 * Template of a post function.
 	 * 
@@ -564,6 +576,9 @@ public class OpenAIService extends RESTService {
 		return Response.ok().entity(chatResponse).build();
 	}
 
+	private Boolean responseBiwi = false;
+	private JSONObject response = new JSONObject();
+
 	@POST
 	@Path("/biwibot")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -575,7 +590,7 @@ public class OpenAIService extends RESTService {
 	@ApiOperation(
 			value = "Get the chat response from biwibot",
 			notes = "Returns the chat response from biwibot")
-	public Response biwibot(@FormDataParam("msg") String msg, @FormDataParam("channel") String channel) {
+	public Response biwibot(@FormDataParam("msg") String msg, @FormDataParam("channel") String channel, @FormDataParam("sbfmUrl") @DefaultValue("default") String sbfmUrl) {
 		System.out.println("Msg:" + msg);
 		System.out.println("Channel:" + channel);
 		Boolean contextOn = false;
@@ -583,58 +598,239 @@ public class OpenAIService extends RESTService {
 		JSONObject chatResponse = new JSONObject();
 		JSONObject newEvent = new JSONObject();
 		String question = null;
-		
-		if(!msg.equals("!exit")){
-			try {
-				question = msg;
-				chatResponse.put("channel", channel);
-				newEvent.put("question", question);
-				newEvent.put("channel", channel);
-				System.out.print(newEvent);
-				// Make the POST request to localhost:5000/chat
-				String url = "https://biwibot.tech4comp.dbis.rwth-aachen.de/generate_response";
-				HttpClient httpClient = HttpClient.newHttpClient();
-				HttpRequest httpRequest = HttpRequest.newBuilder()
-						.uri(UriBuilder.fromUri(url).build())
-						.header("Content-Type", "application/json")
-						.POST(HttpRequest.BodyPublishers.ofString(newEvent.toJSONString()))
-						.build();
+		String orgaChannel = channel;
+		// JSONObject response = new JSONObject();
+		JSONObject exit = new JSONObject();
+		exit.appendField("channel", channel);
 
-				// Send the request
-				HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-				int responseCode = response.statusCode();
+		if (!sbfmUrl.equals("default")) {
+			System.out.println(sbfmUrl);
 
-				if (responseCode == HttpURLConnection.HTTP_OK) {
-					System.out.println("Response from service: " + response.body());
-					
-					// Update chatResponse with the result from the POST request
-					chatResponse.appendField("AIResponse", response.body());
-					chatResponse.appendField("closeContext", contextOn);
-				} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
-					// Handle unsuccessful response
-					chatResponse.appendField("AIResponse", "Biwibot error has occured.");
+			if (isActive.containsKey(orgaChannel)) {
+				if(isActive.getOrDefault(orgaChannel, false)) {
+					response.put("AIResponse", "Einen Moment bitte, ich verarbeit noch deine erste Nachricht.");
+					response.put("closeContext", false);
+					return Response.ok().entity(response.toJSONString()).build();
 				}
-				//System.out.println(chatResponse);
-			} catch ( IOException | InterruptedException e) {
-				e.printStackTrace();
-				chatResponse.appendField("AIResponse", "An error has occurred.");
-			} catch (Throwable e) {
-				e.printStackTrace();
-				chatResponse.appendField("AIResponse", "An unknown error has occurred.");
+			}
+			
+			if (msg.contains("!welcome")) {
+				
+				exit.appendField("message", "!exit");
+				RESTcallBack(sbfmUrl, exit);
+				response.appendField("AIResponse", "Nutze bitte das X, um zum Hauptmenü zu gelangen.");
+				response.appendField("closeContext", true);
+				return Response.ok().entity(response.toString()).build();
 			}
 
-		} else if (msg.equals("!exit")){
-			chatResponse.appendField("closeContext", contextOff);
-			chatResponse.appendField("AIResponse", "Exit AI Tutor");
-		} else if (msg.contains("!welcome")) {
-			chatResponse.appendField("AIResponse", "Nutze bitte das X, um zum Hauptmenü zu gelangen.");
-			chatResponse.appendField("closeContext", contextOff);
+			if (!msg.startsWith("!")){
+				isActive.put(channel, true);
+
+				biwibotAsync(msg, orgaChannel, sbfmUrl);
+
+				ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+				if (!responseBiwi) {
+					response.appendField("AIResponse", "Bitte warte einen Moment ich denke darüber nach.");
+					response.appendField("channel", channel);
+					response.appendField("closeContext", false);
+
+					scheduler.scheduleAtFixedRate(() -> {
+						RESTcallBack(sbfmUrl, response);
+						if (responseBiwi) {
+							response.clear();
+							responseBiwi=false;
+							scheduler.shutdown();
+						}
+					}, 0, 20, TimeUnit.SECONDS);
+				}
+
+				return Response.ok().entity(response.toString()).build();
+			} else {
+				exit.appendField("message", "!exit");
+				exit.appendField("closeContext", true);
+				RESTcallBack(sbfmUrl, exit);
+				response.appendField("AIResponse", "Exit wird ausgeführt.");
+				response.appendField("closeContext", true);
+				return Response.ok().entity(response.toString()).build();
+			}
+
 		} else {
-			chatResponse.appendField("AIResponse", "Ich habe leider keine Nachricht bekommen.");
+
+			if (msg.contains("!welcome")) {
+				chatResponse.appendField("AIResponse", "Nutze bitte das X, um zum Hauptmenü zu gelangen.");
+				chatResponse.appendField("closeContext", contextOff);
+				
+				return Response.ok().entity(chatResponse.toString()).build();
+			}
+
+			if(!msg.equals("!exit")){
+				try {
+					question = msg;
+					chatResponse.put("channel", channel);
+					newEvent.put("question", question);
+					newEvent.put("channel", channel);
+					System.out.print(newEvent);
+					// Make the POST request to localhost:5000/chat
+					String url = "https://biwibot.tech4comp.dbis.rwth-aachen.de/generate_response";
+					HttpClient httpClient = HttpClient.newHttpClient();
+					HttpRequest httpRequest = HttpRequest.newBuilder()
+							.uri(UriBuilder.fromUri(url).build())
+							.header("Content-Type", "application/json")
+							.POST(HttpRequest.BodyPublishers.ofString(newEvent.toJSONString()))
+							.build();
+					// Send the request
+					HttpResponse<String> respond = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+					int responseCode = respond.statusCode();
+					if (responseCode == HttpURLConnection.HTTP_OK) {
+						System.out.println("Response from service: " + respond.body());
+						
+						// Update chatResponse with the result from the POST request
+						chatResponse.appendField("AIResponse", respond.body());
+						chatResponse.appendField("closeContext", contextOn);
+					} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
+						// Handle unsuccessful response
+						chatResponse.appendField("AIResponse", "An error has occurred.");
+						chatResponse.appendField("AIResponse", "Biwibot error has occured.");
+					}
+					//System.out.println(chatResponse);
+				} catch ( IOException | InterruptedException e) {
+					e.printStackTrace();
+					chatResponse.appendField("AIResponse", "An error has occurred.");
+				} catch (Throwable e) {
+					e.printStackTrace();
+					chatResponse.appendField("AIResponse", "An unknown error has occurred.");
+				}
+			} else if (msg.equals("!exit")){
+				chatResponse.appendField("closeContext", contextOff);
+				chatResponse.appendField("AIResponse", "Exit AI Tutor");
+			} else {
+				chatResponse.appendField("AIResponse", "Ich habe leider keine Nachricht bekommen.");
+			}
 		}
-		
+
 		return Response.ok().entity(chatResponse.toString()).build();
 	}
+
+	public void biwibotAsync(@FormDataParam("msg") String msg, @FormDataParam("channel") String orgaChannel, @FormDataParam("sbfmUrl") String sbfmUrl){
+		System.out.println("Msg:" + msg);
+		System.out.println("Channel:" + orgaChannel);
+		Boolean contextOn = false;
+		JSONObject chatResponse = new JSONObject();
+		JSONObject newEvent = new JSONObject();
+		JSONObject error = new JSONObject();
+		String channel = orgaChannel;
+		try {
+			new Thread(new Runnable() {
+				public void run() {
+					try {
+						System.out.println("Thread started.");
+						String question = msg;
+						response.put("channel", channel);
+						chatResponse.put("channel", channel);
+						error.put("channel", channel);
+						newEvent.put("question", question);
+						newEvent.put("channel", channel);
+						System.out.print(newEvent);
+						// Make the POST request to localhost:5000/chat
+						String url = "https://biwibot.tech4comp.dbis.rwth-aachen.de/generate_response";
+						HttpClient httpClient = HttpClient.newHttpClient();
+						HttpRequest httpRequest = HttpRequest.newBuilder()
+								.uri(UriBuilder.fromUri(url).build())
+								.header("Content-Type", "application/json")
+								.POST(HttpRequest.BodyPublishers.ofString(newEvent.toJSONString()))
+								.build();
+
+						// Send the request
+						HttpResponse<String> serviceResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+						int responseCode = serviceResponse.statusCode();
+
+						if (responseCode == HttpURLConnection.HTTP_OK) {
+							responseBiwi = true;
+							System.out.println("Response from service: " + serviceResponse.body());
+							response.appendField("closeContext", contextOn);
+							response.appendField("AIResponse", serviceResponse.body());
+							chatResponse.appendField("closeContext", contextOn);
+							chatResponse.appendField("AIResponse", serviceResponse.body());
+							System.out.println(chatResponse);
+							// RESTcallBack(sbfmUrl, chatResponse);
+						} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
+							responseBiwi = true;
+							// Handle unsuccessful response
+							response.appendField("AIResponse", "Biwibot error has occured.");
+							error.appendField("error", "Biwibot error has occured.");
+							RESTcallBack(sbfmUrl, error);
+						}
+						//System.out.println(chatResponse);
+						isActive.put(channel, false);
+					} catch ( IOException | InterruptedException e) {
+						responseBiwi = true;
+						e.printStackTrace();
+						error.appendField("error", "An error has occurred.");
+						isActive.put(channel, false);
+						RESTcallBack(sbfmUrl, error);
+					} catch (Throwable e) {
+						responseBiwi = true;
+						e.printStackTrace();
+						error.appendField("error", "An unknown error has occurred.");
+						isActive.put(channel, false);
+						RESTcallBack(sbfmUrl, error);
+					}
+				}
+			}).start();
+		} catch (Exception e) {
+			e.printStackTrace();
+			isActive.put(channel, false);
+			// chatResponse.appendField("text","An error has occured (Exception).");
+			return;
+		} catch (Throwable e) {
+			e.printStackTrace();
+			isActive.put(channel,false);
+			// chatResponse.appendField("text", "An unknown error has occured.");
+			return;
+		}
+
+		return;
+	}
+
+	public void callBack(String callbackUrl, String channel, JSONObject body, String email){
+		try {
+			String token = "TestBot:TestBot";    
+			System.out.println("Starting callback to botmanager with url: " + callbackUrl+ "/"+ "sendMessageToRocketChatCallback/" + token + "/" + email + "/" + channel);
+			Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
+			String mp = null;
+			System.out.println(body);
+			mp = body.toJSONString();
+			WebTarget target = textClient
+					.target(callbackUrl + "/" + "sendMessageToRocketChatCallback" + "/" + token + "/" + email + "/" + channel);
+			Response response = target.request()
+					.post(javax.ws.rs.client.Entity.entity(mp, MediaType.APPLICATION_JSON));
+					String test = response.readEntity(String.class);
+			System.out.println("Finished callback to botmanager with response: " + test);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void RESTcallBack(String callbackUrl, JSONObject body){
+		try {
+			System.out.println("Starting callback to botmanager with url: " + callbackUrl + "/AsyncMessage");
+			Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
+			String mp = null;
+			System.out.println(body);
+			mp = body.toJSONString();
+			WebTarget target = textClient
+					.target(callbackUrl
+					+ "/AsyncMessage");
+			Response response = target.request()
+					.post(javax.ws.rs.client.Entity.entity(mp, MediaType.APPLICATION_JSON));
+					String test = response.readEntity(String.class);
+			System.out.println("Finished callback to botmanager with response: " + test);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 
 	public static HashMap<String, String> toMap(JSONObject jsonobj) {
         HashMap<String, String> map = new HashMap<String, String>();
