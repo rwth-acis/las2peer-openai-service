@@ -607,15 +607,20 @@ public class OpenAIService extends RESTService {
 			System.out.println(sbfmUrl);
 
 			if (isActive.containsKey(orgaChannel)) {
-				if(isActive.getOrDefault(orgaChannel, false)) {
-					response.put("AIResponse", "Einen Moment bitte, ich verarbeit noch deine erste Nachricht.");
+				if(isActive.getOrDefault(orgaChannel, false) && !msg.startsWith("!")) {
+					response.put("AIResponse", "Einen Moment bitte, ich verarbeite noch deine erste Nachricht.");
 					response.put("closeContext", false);
 					return Response.ok().entity(response.toJSONString()).build();
+				} else if (msg.startsWith("!")) {
+					exit.appendField("message", "!exit");
+					RESTcallBack(sbfmUrl, exit);
+					response.appendField("AIResponse", "Nutze bitte das X, um zum Hauptmenü zu gelangen.");
+					response.appendField("closeContext", true);
+					return Response.ok().entity(response.toString()).build();
 				}
 			}
 			
 			if (msg.contains("!welcome")) {
-				
 				exit.appendField("message", "!exit");
 				RESTcallBack(sbfmUrl, exit);
 				response.appendField("AIResponse", "Nutze bitte das X, um zum Hauptmenü zu gelangen.");
