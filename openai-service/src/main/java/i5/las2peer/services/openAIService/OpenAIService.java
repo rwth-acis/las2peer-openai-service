@@ -43,6 +43,7 @@ import javax.ws.rs.Path;
 import java.nio.file.Paths;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
@@ -51,6 +52,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -123,9 +125,31 @@ import java.nio.charset.StandardCharsets;
 						name = "CC0",
 						url = "https://github.com/rwth-acis/las2peer-openai-service/blob/main/LICENSE")))
 @ServicePath("/openai")
-// TODO Your own service class
 public class OpenAIService extends RESTService {
+	private String pgsqlHost;
+	private String pgsqlPort;
+	private String pgsqlUser;
+	private String pgsqlPassword;
+	private String pgsqlDB;
+
+	private static BasicDataSource dataSource;
+
 	private static HashMap<String, Boolean> isActive = new HashMap<String, Boolean>();
+
+	private void initDB() {
+		if (dataSource == null) {
+            dataSource = new BasicDataSource();
+            dataSource.setDriverClassName("org.postgresql.Driver");
+            dataSource.setUrl("jdbc:postgresql://"+pgsqlHost+":"+pgsqlPort+"/"+pgsqlDB);
+            dataSource.setUsername(pgsqlUser);
+            dataSource.setPassword(pgsqlPassword);
+
+            // Set connection pool properties
+            dataSource.setInitialSize(5);
+            dataSource.setMaxTotal(10);
+        }
+	}
+
 
 	EncodingRegistry registry = Encodings.newDefaultEncodingRegistry();
 	Encoding encoding = registry.getEncoding(EncodingType.CL100K_BASE);
@@ -590,9 +614,10 @@ public class OpenAIService extends RESTService {
 	@ApiOperation(
 			value = "Get the chat response from biwibot",
 			notes = "Returns the chat response from biwibot")
-	public Response biwibot(@FormDataParam("msg") String msg, @FormDataParam("channel") String channel, @FormDataParam("sbfmUrl") @DefaultValue("default") String sbfmUrl) {
+	public Response biwibot(@FormDataParam("msg") String msg, @FormDataParam("channel") String channel, @FormDataParam("sbfmUrl") @DefaultValue("default") String sbfmUrl, @FormDataParam("material") @DefaultValue("default") String material) {
 		System.out.println("Msg:" + msg);
 		System.out.println("Channel:" + channel);
+		System.out.println("Material:" + material);
 		Boolean contextOn = false;
 		Boolean contextOff = true;
 		JSONObject chatResponse = new JSONObject();
@@ -602,6 +627,11 @@ public class OpenAIService extends RESTService {
 		// JSONObject response = new JSONObject();
 		JSONObject exit = new JSONObject();
 		exit.appendField("channel", channel);
+		if (!material.equals("default")) {
+			newEvent.put("material", material);
+		} else {
+			newEvent.put("material", "None");
+		}
 
 		if (!sbfmUrl.equals("default")) {
 			System.out.println(sbfmUrl);
@@ -630,8 +660,8 @@ public class OpenAIService extends RESTService {
 
 			if (!msg.startsWith("!")){
 				isActive.put(channel, true);
-
-				biwibotAsync(msg, orgaChannel, sbfmUrl);
+				//call biwibot
+				biwibotAsync(msg, orgaChannel, sbfmUrl, material);
 
 				ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
@@ -717,7 +747,7 @@ public class OpenAIService extends RESTService {
 		return Response.ok().entity(chatResponse.toString()).build();
 	}
 
-	public void biwibotAsync(@FormDataParam("msg") String msg, @FormDataParam("channel") String orgaChannel, @FormDataParam("sbfmUrl") String sbfmUrl){
+	public void biwibotAsync(@FormDataParam("msg") String msg, @FormDataParam("channel") String orgaChannel, @FormDataParam("sbfmUrl") String sbfmUrl, @FormDataParam("material") @DefaultValue ("default") String material){
 		System.out.println("Msg:" + msg);
 		System.out.println("Channel:" + orgaChannel);
 		Boolean contextOn = false;
@@ -736,6 +766,11 @@ public class OpenAIService extends RESTService {
 						error.put("channel", channel);
 						newEvent.put("question", question);
 						newEvent.put("channel", channel);
+						if (!material.equals("default")) {
+							newEvent.put("material", material);
+						} else {
+							newEvent.put("material", "None");
+						}
 						System.out.print(newEvent);
 						// Make the POST request to localhost:5000/chat
 						String url = "https://biwibot.tech4comp.dbis.rwth-aachen.de/generate_response";
@@ -834,6 +869,85 @@ public class OpenAIService extends RESTService {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	@GET
+	@Path("/biwibot_materials")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "") })
+	@ApiOperation(value = "getAllMaterials", notes = "Returns all available materials to select from")
+	public Response biwibot_materials(@QueryParam("channel") int channel) {
+		// initDB();
+		// Connection conn = null;
+		// PreparedStatement stmt = null;
+		// ResultSet rs = null;
+		JSONArray jsonArray = new JSONArray();
+		JSONArray interactiveElements = new JSONArray();
+		JSONObject test = new JSONObject();
+		test.put("couseid", "6");
+		test.put("material", "Lecture Material");
+		jsonArray.add(test);
+		test.put("intent", "material lecture material");
+		test.put("label", "Lecture Material");
+		test.put("isFile", false);
+		interactiveElements.add(test);
+
+		JSONObject test2 = new JSONObject();
+		test2.put("couseid", "6");
+		test2.put("material", "All Seminar Material");
+		jsonArray.add(test2);
+		test2.put("intent", "material all seminar materials");
+		test2.put("label", "All Seminar Material");
+		test2.put("isFile", false);
+		interactiveElements.add(test2);
+		// try {
+		// 	conn = dataSource.getConnection();
+		// 	if (channel == 0) {
+		// 		stmt = conn.prepareStatement("SELECT * FROM materials;");
+		// 	} else {
+		// 		stmt = conn.prepareStatement("SELECT * FROM materials WHERE courseid = ?;");
+		// 		stmt.setInt(1, channel);
+		// 	}
+		// 	rs = stmt.executeQuery();
+
+		// 	while (rs.next()) {
+		// 		channel = rs.getInt("courseid");
+		// 		String material = rs.getString("material");
+
+		// 		JSONObject jsonObject = new JSONObject();
+		// 		jsonObject.put("courseId", channel);
+		// 		jsonObject.put("material", material);
+
+		// 		jsonArray.add(jsonObject);
+		// 		jsonObject = new JSONObject();
+		// 		jsonObject.put("intent", "material " + material);
+		// 		jsonObject.put("label", "material "+ material);
+		// 		jsonObject.put("isFile", false);
+
+		// 		interactiveElements.add(jsonObject);
+		// 	}
+		// } catch (SQLException e) {
+		// 	// TODO Auto-generated catch block
+		// 	e.printStackTrace();
+		// } finally {
+		// 	try {
+		// 		if (rs != null) {
+		// 			rs.close();
+		// 		}
+		// 		if (stmt != null) {
+		// 			stmt.close();
+		// 		}
+		// 		if (conn != null) {
+		// 			conn.close();
+		// 		}
+		// 	} catch (SQLException ex) {
+		// 		System.out.println(ex.getMessage());
+		// 	}
+		// }
+		JSONObject response = new JSONObject();
+		response.put("data", jsonArray);
+		response.put("interactiveElements", interactiveElements);
+		return Response.ok().entity(response.toString()).build();
 	}
 
 

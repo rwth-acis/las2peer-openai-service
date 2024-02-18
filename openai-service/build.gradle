@@ -31,6 +31,11 @@ dependencies {
     //implementation "com.fasterxml.jackson.core:jackson-databind:2.14.2"
     implementation 'com.knuddels:jtokkit:0.6.1'
     implementation 'org.json:json:20171018'
+    
+    // for writing tasks postgresql connection
+    implementation "org.apache.commons:commons-dbcp2:2.9.0"
+    implementation 'org.postgresql:postgresql:42.6.0'
+
 }
 
 configurations {
