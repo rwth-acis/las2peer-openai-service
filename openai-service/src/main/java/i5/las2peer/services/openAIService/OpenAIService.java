@@ -52,7 +52,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 
-import org.apache.commons.dbcp2.BasicDataSource;
+// import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -132,23 +132,23 @@ public class OpenAIService extends RESTService {
 	private String pgsqlPassword;
 	private String pgsqlDB;
 
-	private static BasicDataSource dataSource;
+	// private static BasicDataSource dataSource;
 
 	private static HashMap<String, Boolean> isActive = new HashMap<String, Boolean>();
 
-	private void initDB() {
-		if (dataSource == null) {
-            dataSource = new BasicDataSource();
-            dataSource.setDriverClassName("org.postgresql.Driver");
-            dataSource.setUrl("jdbc:postgresql://"+pgsqlHost+":"+pgsqlPort+"/"+pgsqlDB);
-            dataSource.setUsername(pgsqlUser);
-            dataSource.setPassword(pgsqlPassword);
+	// private void initDB() {
+	// 	if (dataSource == null) {
+    //         dataSource = new BasicDataSource();
+    //         dataSource.setDriverClassName("org.postgresql.Driver");
+    //         dataSource.setUrl("jdbc:postgresql://"+pgsqlHost+":"+pgsqlPort+"/"+pgsqlDB);
+    //         dataSource.setUsername(pgsqlUser);
+    //         dataSource.setPassword(pgsqlPassword);
 
-            // Set connection pool properties
-            dataSource.setInitialSize(5);
-            dataSource.setMaxTotal(10);
-        }
-	}
+    //         // Set connection pool properties
+    //         dataSource.setInitialSize(5);
+    //         dataSource.setMaxTotal(10);
+    //     }
+	// }
 
 
 	EncodingRegistry registry = Encodings.newDefaultEncodingRegistry();
