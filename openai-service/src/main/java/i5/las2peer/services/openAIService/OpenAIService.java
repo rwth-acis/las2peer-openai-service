@@ -116,11 +116,11 @@ import java.nio.charset.StandardCharsets;
 		info = @Info(
 				title = "las2peer OpenAI Service",
 				version = "1.0.0",
-				description = "A las2peer wrapper service for the social-bot-manager service to make request to OpenAI API functions.",
+				description = "A las2peer wrapper service for the social-bot-manager service to make request to OpenAI API functions and connect to the Biwibot service.",
 				termsOfService = "https://tech4comp.de/",
 				contact = @Contact(
-						name = "Samuel Kwong",
-						email = "samuel.kwong@rwth-aachen.de"),
+						name = "Samuel Kwong, Yue Yin",
+						email = "samuel.kwong@rwth-aachen.de, yue.yin@rwth-aachen.de"),
 				license = @License(
 						name = "CC0",
 						url = "https://github.com/rwth-acis/las2peer-openai-service/blob/main/LICENSE")))
@@ -599,6 +599,85 @@ public class OpenAIService extends RESTService {
 
 		return Response.ok().entity(chatResponse).build();
 	}
+	
+	@GET
+	@Path("/biwibotMaterials")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "") })
+	@ApiOperation(value = "biwibotMaterials", notes = "Returns all available materials to select from")
+	public Response biwibotMaterials(@QueryParam("channel") int channel) {
+		// initDB();
+		// Connection conn = null;
+		// PreparedStatement stmt = null;
+		// ResultSet rs = null;
+		JSONArray jsonArray = new JSONArray();
+		JSONArray interactiveElements = new JSONArray();
+		JSONObject test = new JSONObject();
+		test.put("couseid", "6");
+		test.put("material", "Lecture Material");
+		jsonArray.add(test);
+		test.put("intent", "material lecture material");
+		test.put("label", "Lecture Material");
+		test.put("isFile", false);
+		interactiveElements.add(test);
+
+		JSONObject test2 = new JSONObject();
+		test2.put("couseid", "6");
+		test2.put("material", "All Seminar Material");
+		jsonArray.add(test2);
+		test2.put("intent", "material all seminar materials");
+		test2.put("label", "All Seminar Material");
+		test2.put("isFile", false);
+		interactiveElements.add(test2);
+		// try {
+		// 	conn = dataSource.getConnection();
+		// 	if (channel == 0) {
+		// 		stmt = conn.prepareStatement("SELECT * FROM materials;");
+		// 	} else {
+		// 		stmt = conn.prepareStatement("SELECT * FROM materials WHERE courseid = ?;");
+		// 		stmt.setInt(1, channel);
+		// 	}
+		// 	rs = stmt.executeQuery();
+
+		// 	while (rs.next()) {
+		// 		channel = rs.getInt("courseid");
+		// 		String material = rs.getString("material");
+
+		// 		JSONObject jsonObject = new JSONObject();
+		// 		jsonObject.put("courseId", channel);
+		// 		jsonObject.put("material", material);
+
+		// 		jsonArray.add(jsonObject);
+		// 		jsonObject = new JSONObject();
+		// 		jsonObject.put("intent", "material " + material);
+		// 		jsonObject.put("label", "material "+ material);
+		// 		jsonObject.put("isFile", false);
+
+		// 		interactiveElements.add(jsonObject);
+		// 	}
+		// } catch (SQLException e) {
+		// 	// TODO Auto-generated catch block
+		// 	e.printStackTrace();
+		// } finally {
+		// 	try {
+		// 		if (rs != null) {
+		// 			rs.close();
+		// 		}
+		// 		if (stmt != null) {
+		// 			stmt.close();
+		// 		}
+		// 		if (conn != null) {
+		// 			conn.close();
+		// 		}
+		// 	} catch (SQLException ex) {
+		// 		System.out.println(ex.getMessage());
+		// 	}
+		// }
+		JSONObject response = new JSONObject();
+		response.put("data", jsonArray);
+		response.put("interactiveElements", interactiveElements);
+		return Response.ok().entity(response.toString()).build();
+	}
 
 	private Boolean responseBiwi = false;
 	private JSONObject response = new JSONObject();
@@ -869,85 +948,6 @@ public class OpenAIService extends RESTService {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-
-	@GET
-	@Path("/biwibot_materials")
-	@Produces(MediaType.APPLICATION_JSON)
-	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "") })
-	@ApiOperation(value = "getAllMaterials", notes = "Returns all available materials to select from")
-	public Response biwibot_materials(@QueryParam("channel") int channel) {
-		// initDB();
-		// Connection conn = null;
-		// PreparedStatement stmt = null;
-		// ResultSet rs = null;
-		JSONArray jsonArray = new JSONArray();
-		JSONArray interactiveElements = new JSONArray();
-		JSONObject test = new JSONObject();
-		test.put("couseid", "6");
-		test.put("material", "Lecture Material");
-		jsonArray.add(test);
-		test.put("intent", "material lecture material");
-		test.put("label", "Lecture Material");
-		test.put("isFile", false);
-		interactiveElements.add(test);
-
-		JSONObject test2 = new JSONObject();
-		test2.put("couseid", "6");
-		test2.put("material", "All Seminar Material");
-		jsonArray.add(test2);
-		test2.put("intent", "material all seminar materials");
-		test2.put("label", "All Seminar Material");
-		test2.put("isFile", false);
-		interactiveElements.add(test2);
-		// try {
-		// 	conn = dataSource.getConnection();
-		// 	if (channel == 0) {
-		// 		stmt = conn.prepareStatement("SELECT * FROM materials;");
-		// 	} else {
-		// 		stmt = conn.prepareStatement("SELECT * FROM materials WHERE courseid = ?;");
-		// 		stmt.setInt(1, channel);
-		// 	}
-		// 	rs = stmt.executeQuery();
-
-		// 	while (rs.next()) {
-		// 		channel = rs.getInt("courseid");
-		// 		String material = rs.getString("material");
-
-		// 		JSONObject jsonObject = new JSONObject();
-		// 		jsonObject.put("courseId", channel);
-		// 		jsonObject.put("material", material);
-
-		// 		jsonArray.add(jsonObject);
-		// 		jsonObject = new JSONObject();
-		// 		jsonObject.put("intent", "material " + material);
-		// 		jsonObject.put("label", "material "+ material);
-		// 		jsonObject.put("isFile", false);
-
-		// 		interactiveElements.add(jsonObject);
-		// 	}
-		// } catch (SQLException e) {
-		// 	// TODO Auto-generated catch block
-		// 	e.printStackTrace();
-		// } finally {
-		// 	try {
-		// 		if (rs != null) {
-		// 			rs.close();
-		// 		}
-		// 		if (stmt != null) {
-		// 			stmt.close();
-		// 		}
-		// 		if (conn != null) {
-		// 			conn.close();
-		// 		}
-		// 	} catch (SQLException ex) {
-		// 		System.out.println(ex.getMessage());
-		// 	}
-		// }
-		JSONObject response = new JSONObject();
-		response.put("data", jsonArray);
-		response.put("interactiveElements", interactiveElements);
-		return Response.ok().entity(response.toString()).build();
 	}
 
 
