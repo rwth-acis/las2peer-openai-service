@@ -823,8 +823,9 @@ public class OpenAIService extends RESTService {
 				element.put("label", "welcome");
 				element.put("isFile", "false");
 				interactiveElements.add(element);
-				chatResponse.appendField("closeContext", contextOff);
-				chatResponse.appendField("interactiveElements", interactiveElements);
+				chatResponse.put("closeContext", contextOff);
+				chatResponse.put("interactiveElements", interactiveElements);
+				chatResponse.put("AIResponse", "Exit ausgeführt");
 			} else {
 				chatResponse.appendField("AIResponse", "Ich habe leider keine Nachricht bekommen.");
 			}
