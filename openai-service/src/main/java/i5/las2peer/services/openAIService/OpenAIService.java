@@ -817,13 +817,18 @@ public class OpenAIService extends RESTService {
 					chatResponse.appendField("AIResponse", "An unknown error has occurred.");
 				}
 			} else if (msg.equals("!exit")){
+				JSONArray jsonArray = new JSONArray();
 				JSONArray interactiveElements = new JSONArray();
 				JSONObject element = new JSONObject();
+				element.put("courseid", channel);
+				element.put("message","exit");
+				jsonArray.add(element);
 				element.put("intent", "welcome");
 				element.put("label", "welcome");
 				element.put("isFile", "false");
 				interactiveElements.add(element);
 				chatResponse.put("closeContext", contextOff);
+				chatResponse.put("data", jsonArray);
 				chatResponse.put("interactiveElements", interactiveElements);
 				chatResponse.put("AIResponse", "Exit ausgeführt");
 			} else {
