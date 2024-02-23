@@ -124,6 +124,7 @@ import java.nio.charset.StandardCharsets;
 				license = @License(
 						name = "CC0",
 						url = "https://github.com/rwth-acis/las2peer-openai-service/blob/main/LICENSE")))
+@ManualDeployment
 @ServicePath("/openai")
 public class OpenAIService extends RESTService {
 	private String pgsqlHost;
@@ -816,8 +817,14 @@ public class OpenAIService extends RESTService {
 					chatResponse.appendField("AIResponse", "An unknown error has occurred.");
 				}
 			} else if (msg.equals("!exit")){
+				JSONArray interactiveElements = new JSONArray();
+				JSONObject element = new JSONObject();
+				element.put("intent", "welcome");
+				element.put("label", "welcome");
+				element.put("isFile", "false");
+				interactiveElements.add(element);
 				chatResponse.appendField("closeContext", contextOff);
-				chatResponse.appendField("AIResponse", "Exit AI Tutor");
+				chatResponse.appendField("interactiveElements", interactiveElements);
 			} else {
 				chatResponse.appendField("AIResponse", "Ich habe leider keine Nachricht bekommen.");
 			}
