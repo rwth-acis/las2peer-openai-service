@@ -52,9 +52,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 
-// import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -133,23 +133,23 @@ public class OpenAIService extends RESTService {
 	private String pgsqlPassword;
 	private String pgsqlDB;
 
-	// private static BasicDataSource dataSource;
+	private static BasicDataSource dataSource;
 
 	private static HashMap<String, Boolean> isActive = new HashMap<String, Boolean>();
 
-	// private void initDB() {
-	// 	if (dataSource == null) {
-    //         dataSource = new BasicDataSource();
-    //         dataSource.setDriverClassName("org.postgresql.Driver");
-    //         dataSource.setUrl("jdbc:postgresql://"+pgsqlHost+":"+pgsqlPort+"/"+pgsqlDB);
-    //         dataSource.setUsername(pgsqlUser);
-    //         dataSource.setPassword(pgsqlPassword);
+	private void initDB() {
+		if (dataSource == null) {
+            dataSource = new BasicDataSource();
+            dataSource.setDriverClassName("org.postgresql.Driver");
+            dataSource.setUrl("jdbc:postgresql://"+pgsqlHost+":"+pgsqlPort+"/"+pgsqlDB);
+            dataSource.setUsername(pgsqlUser);
+            dataSource.setPassword(pgsqlPassword);
 
-    //         // Set connection pool properties
-    //         dataSource.setInitialSize(5);
-    //         dataSource.setMaxTotal(10);
-    //     }
-	// }
+            // Set connection pool properties
+            dataSource.setInitialSize(5);
+            dataSource.setMaxTotal(10);
+        }
+	}
 
 
 	EncodingRegistry registry = Encodings.newDefaultEncodingRegistry();
@@ -607,10 +607,10 @@ public class OpenAIService extends RESTService {
 	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "") })
 	@ApiOperation(value = "biwibotMaterials", notes = "Returns all available materials to select from")
 	public Response biwibotMaterials(@QueryParam("channel") int channel) {
-		// initDB();
-		// Connection conn = null;
-		// PreparedStatement stmt = null;
-		// ResultSet rs = null;
+		initDB();
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
 		JSONArray jsonArray = new JSONArray();
 		JSONArray interactiveElements = new JSONArray();
 		JSONObject test = new JSONObject();
@@ -630,6 +630,7 @@ public class OpenAIService extends RESTService {
 		test2.put("label", "All Seminar Material");
 		test2.put("isFile", false);
 		interactiveElements.add(test2);
+
 		// try {
 		// 	conn = dataSource.getConnection();
 		// 	if (channel == 0) {
@@ -674,6 +675,7 @@ public class OpenAIService extends RESTService {
 		// 		System.out.println(ex.getMessage());
 		// 	}
 		// }
+
 		JSONObject response = new JSONObject();
 		response.put("data", jsonArray);
 		response.put("interactiveElements", interactiveElements);
@@ -817,20 +819,8 @@ public class OpenAIService extends RESTService {
 					chatResponse.appendField("AIResponse", "An unknown error has occurred.");
 				}
 			} else if (msg.equals("!exit")){
-				JSONArray jsonArray = new JSONArray();
-				JSONArray interactiveElements = new JSONArray();
-				JSONObject element = new JSONObject();
-				element.put("courseid", channel);
-				element.put("message","exit");
-				jsonArray.add(element);
-				element.put("intent", "welcome");
-				element.put("label", "welcome");
-				element.put("isFile", "false");
-				interactiveElements.add(element);
 				chatResponse.put("closeContext", contextOff);
-				chatResponse.put("data", jsonArray);
-				chatResponse.put("interactiveElements", interactiveElements);
-				chatResponse.put("AIResponse", "Exit ausgeführt");
+				chatResponse.put("AIResponse", "Exit AI Tutor, benutze bitte noch einmal das X um neuzustarten.");
 			} else {
 				chatResponse.appendField("AIResponse", "Ich habe leider keine Nachricht bekommen.");
 			}
