@@ -33,9 +33,10 @@ dependencies {
     implementation 'org.json:json:20171018'
     
     // for writing tasks postgresql connection
-    // implementation "org.apache.commons:commons-dbcp2:2.12.0"
-    // implementation 'org.postgresql:postgresql:42.7.1'
+    implementation "org.apache.commons:commons-dbcp2:2.9.0" 
+    implementation 'org.postgresql:postgresql:42.7.1'
 }
+
 
 configurations {
     // This ensures las2peer is available in the tests, but won't be bundled
@@ -53,6 +54,7 @@ jar {
         // Exclude signatures to be able to natively bundle signed jars
         exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
     }
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
 }
 
 application {
