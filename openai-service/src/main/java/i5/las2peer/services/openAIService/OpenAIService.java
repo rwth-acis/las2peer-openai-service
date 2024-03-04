@@ -619,6 +619,7 @@ public class OpenAIService extends RESTService {
 		jsonArray.add(test);
 		test.put("intent", "material lecture material");
 		test.put("label", "Lecture Material");
+		test.put("description", "Lecture Material");
 		test.put("isFile", false);
 		interactiveElements.add(test);
 
@@ -628,6 +629,7 @@ public class OpenAIService extends RESTService {
 		jsonArray.add(test2);
 		test2.put("intent", "material all seminar materials");
 		test2.put("label", "All Seminar Material");
+		test2.put("description", "All Seminar Material");
 		test2.put("isFile", false);
 		interactiveElements.add(test2);
 
@@ -653,6 +655,7 @@ public class OpenAIService extends RESTService {
 		// 		jsonObject = new JSONObject();
 		// 		jsonObject.put("intent", "material " + material);
 		// 		jsonObject.put("label", "material "+ material);
+		// 		jsonObject.put("description", "material "+ material);
 		// 		jsonObject.put("isFile", false);
 
 		// 		interactiveElements.add(jsonObject);
