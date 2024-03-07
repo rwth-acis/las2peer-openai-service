@@ -682,6 +682,7 @@ public class OpenAIService extends RESTService {
 		JSONObject response = new JSONObject();
 		response.put("data", jsonArray);
 		response.put("interactiveElements", interactiveElements);
+		response.put("closeContext", true);
 		return Response.ok().entity(response.toString()).build();
 	}
 
