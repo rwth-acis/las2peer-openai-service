@@ -687,12 +687,12 @@ public class OpenAIService extends RESTService {
 		return Response.ok().entity(response.toString()).build();
 	}
 
-	@GET
+	@POST
 	@Path("/setBiwibotMaterials")
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "") })
 	@ApiOperation(value = "setBiwibotMaterial", notes = "set the material for user")
-	public Response setBiwibotMaterials(@QueryParam("material") String material, @FormDataParam("channel") String channel) {
+	public Response setBiwibotMaterials(@FormDataParam("material") String material, @FormDataParam("channel") String channel) {
 		//Clear hashmap after some time?
 		selectedMaterial.put(channel, material);
 		System.out.println("Selected Materials are: " + selectedMaterial.toString());
