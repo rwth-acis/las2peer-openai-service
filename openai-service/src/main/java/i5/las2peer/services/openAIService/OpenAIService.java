@@ -718,7 +718,7 @@ public class OpenAIService extends RESTService {
 		} else {
 			newEvent.put("material", "None");
 		}
-
+		System.out.println(newEvent);
 		if (!sbfmUrl.equals("default")) {
 			System.out.println(sbfmUrl);
 
