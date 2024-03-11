@@ -407,7 +407,6 @@ public class OpenAIService extends RESTService {
 		return Response.ok().entity(chatResponse).build();
 	}
 	
-
 	@POST
 	@Path("/chat")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -600,7 +599,9 @@ public class OpenAIService extends RESTService {
 
 		return Response.ok().entity(chatResponse).build();
 	}
-	
+
+	private static HashMap<String,String> selectedMaterial = new HashMap<String,String> ();
+
 	@GET
 	@Path("/biwibotMaterials")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -686,6 +687,21 @@ public class OpenAIService extends RESTService {
 		return Response.ok().entity(response.toString()).build();
 	}
 
+	@GET
+	@Path("/setBiwibotMaterials")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "") })
+	@ApiOperation(value = "setBiwibotMaterial", notes = "set the material for user")
+	public Response setBiwibotMaterials(@QueryParam("material") String material, @FormDataParam("channel") String channel) {
+		//Clear hashmap after some time?
+		selectedMaterial.put(channel, material);
+		System.out.println("Selected Materials are: " + selectedMaterial.toString());
+		JSONObject response = new JSONObject();
+		response.put("message", "Material " + material + "set.");
+		response.put("material", material);
+		return Response.ok().entity(response.toString()).build();
+	}
+
 	private Boolean responseBiwi = false;
 	private JSONObject response = new JSONObject();
 
@@ -713,7 +729,8 @@ public class OpenAIService extends RESTService {
 		// JSONObject response = new JSONObject();
 		JSONObject exit = new JSONObject();
 		exit.appendField("channel", channel);
-		if (!material.equals("default")) {
+		material = selectedMaterial.get(channel);
+		if (selectedMaterial.containsKey(channel)) {
 			newEvent.put("material", material);
 		} else {
 			newEvent.put("material", "None");
