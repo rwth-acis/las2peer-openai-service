@@ -628,7 +628,7 @@ public class OpenAIService extends RESTService {
 		test2.put("couseid", "6");
 		test2.put("material", "All Seminar Material");
 		jsonArray.add(test2);
-		test2.put("intent", "material all seminar materials");
+		test2.put("intent", "material all seminar material");
 		test2.put("label", "All Seminar Material");
 		test2.put("description", "All Seminar Material");
 		test2.put("isFile", false);
