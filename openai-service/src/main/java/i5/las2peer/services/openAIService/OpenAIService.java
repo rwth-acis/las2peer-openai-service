@@ -739,7 +739,6 @@ public class OpenAIService extends RESTService {
 		System.out.println(newEvent);
 		if (!sbfmUrl.equals("default")) {
 			System.out.println(sbfmUrl);
-
 			if (isActive.containsKey(orgaChannel)) {
 				if(isActive.getOrDefault(orgaChannel, false) && !msg.startsWith("!")) {
 					response.put("AIResponse", "Einen Moment bitte, ich verarbeite noch deine erste Nachricht.");
@@ -807,6 +806,7 @@ public class OpenAIService extends RESTService {
 				try {
 					question = msg;
 					chatResponse.put("channel", channel);
+					chatResponse.put("AIenhanced", true);
 					newEvent.put("question", question);
 					newEvent.put("channel", channel);
 					System.out.print(newEvent);
@@ -866,6 +866,7 @@ public class OpenAIService extends RESTService {
 						System.out.println("Thread started.");
 						String question = msg;
 						response.put("channel", channel);
+						response.put("AIenhanced", true);
 						chatResponse.put("channel", channel);
 						error.put("channel", channel);
 						newEvent.put("question", question);
