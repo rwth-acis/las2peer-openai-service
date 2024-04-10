@@ -619,8 +619,8 @@ public class OpenAIService extends RESTService {
 		lecture.put("material", "Lecture Material");
 		jsonArray.add(lecture);
 		lecture.put("intent", "material lecture material");
-		lecture.put("label", "Vorlesungsmaterialien");
-		lecture.put("description", "Vorlesungsmaterialien");
+		lecture.put("label", "Vorlesung");
+		lecture.put("description", "Vorlesung");
 		lecture.put("isFile", false);
 		interactiveElements.add(lecture);
 
@@ -629,8 +629,8 @@ public class OpenAIService extends RESTService {
 		seminar_all.put("material", "All Seminar Material");
 		jsonArray.add(seminar_all);
 		seminar_all.put("intent", "material all seminar material");
-		seminar_all.put("label", "Alle Seminar Materialien");
-		seminar_all.put("description", "Alle Seminar Materialien");
+		seminar_all.put("label", "Seminar");
+		seminar_all.put("description", "Seminar");
 		seminar_all.put("isFile", false);
 		interactiveElements.add(seminar_all);
 
@@ -649,19 +649,19 @@ public class OpenAIService extends RESTService {
 		organizational.put("material", "Organisational Material");
 		jsonArray.add(organizational);
 		organizational.put("intent", "material organisational material");
-		organizational.put("label", "Organisatorische Materialien");
-		organizational.put("description", "Organisatorische Materialien");
+		organizational.put("label", "Organisatorisches");
+		organizational.put("description", "Organisatorisches");
 		organizational.put("isFile", false);
 		interactiveElements.add(organizational);
-		int i = 1;
-		while(i <= 12){
+
+		for(int i=1 ; i <= 12; i++){
 			JSONObject seminar  = new JSONObject();
 			seminar.put("couseid", channel);
 			seminar.put("material", "Seminar " + Integer.toString(i) + " Material");
 			jsonArray.add(seminar);
 			seminar.put("intent", "material seminar " + Integer.toString(i) + " material");
-			seminar.put("label", "Seminar " + Integer.toString(i) + " Materialien");
-			seminar.put("description", "Seminar " + Integer.toString(i) + " Materialien");
+			seminar.put("label", "Seminar " + Integer.toString(i));
+			seminar.put("description", "Seminar " + Integer.toString(i));
 			seminar.put("isFile", false);
 			interactiveElements.add(seminar);
 		}
