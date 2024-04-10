@@ -654,17 +654,17 @@ public class OpenAIService extends RESTService {
 		organizational.put("isFile", false);
 		interactiveElements.add(organizational);
 
-		for(int i=1 ; i <= 12; i++){
-			JSONObject seminar  = new JSONObject();
-			seminar.put("couseid", channel);
-			seminar.put("material", "Seminar " + Integer.toString(i) + " Material");
-			jsonArray.add(seminar);
-			seminar.put("intent", "material seminar " + Integer.toString(i) + " material");
-			seminar.put("label", "Seminar " + Integer.toString(i));
-			seminar.put("description", "Seminar " + Integer.toString(i));
-			seminar.put("isFile", false);
-			interactiveElements.add(seminar);
-		}
+		// for(int i=1 ; i <= 12; i++){
+		// 	JSONObject seminar  = new JSONObject();
+		// 	seminar.put("couseid", channel);
+		// 	seminar.put("material", "Seminar " + Integer.toString(i) + " Material");
+		// 	jsonArray.add(seminar);
+		// 	seminar.put("intent", "material seminar " + Integer.toString(i) + " material");
+		// 	seminar.put("label", "Seminar " + Integer.toString(i));
+		// 	seminar.put("description", "Seminar " + Integer.toString(i));
+		// 	seminar.put("isFile", false);
+		// 	interactiveElements.add(seminar);
+		// }
 
 		// try {
 		// 	conn = dataSource.getConnection();
