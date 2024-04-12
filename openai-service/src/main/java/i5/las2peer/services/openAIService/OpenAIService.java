@@ -872,19 +872,19 @@ public class OpenAIService extends RESTService {
 					chatResponse.appendField("AIResponse", "An unknown error has occurred.");
 				}
 			} else if (msg.equals("!exit")){
-				JSONObject input = new JSONObject();
-				input.put("message", "!exit");
-				String url = "https://las2peer.tech4comp.dbis.rwth-aachen.der/SBFManager/RESTfulChat/Feedbot/" + channel.split("-")[0] + "/" + channel.split("-")[1];
-					HttpClient httpClient = HttpClient.newHttpClient();
-					HttpRequest httpRequest = HttpRequest.newBuilder()
-							.uri(UriBuilder.fromUri(url).build())
-							.header("Content-Type", "application/json")
-							.POST(HttpRequest.BodyPublishers.ofString(input.toJSONString()))
-							.build();
-					// Send the request
-					HttpResponse<String> respond = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-					int responseCode = respond.statusCode();
-				System.out.println("Response from SBF:" + responseCode);
+				// JSONObject input = new JSONObject();
+				// input.put("message", "!exit");
+				// String url = "https://las2peer.tech4comp.dbis.rwth-aachen.der/SBFManager/RESTfulChat/Feedbot/" + channel.split("-")[0] + "/" + channel.split("-")[1];
+				// 	HttpClient httpClient = HttpClient.newHttpClient();
+				// 	HttpRequest httpRequest = HttpRequest.newBuilder()
+				// 			.uri(UriBuilder.fromUri(url).build())
+				// 			.header("Content-Type", "application/json")
+				// 			.POST(HttpRequest.BodyPublishers.ofString(input.toJSONString()))
+				// 			.build();
+				// 	// Send the request
+				// 	HttpResponse<String> respond = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+				// 	int responseCode = respond.statusCode();
+				// System.out.println("Response from SBF:" + responseCode);
 				chatResponse.put("message", "Exit AI Tutor, benutze bitte noch einmal das X im Eingabefeld um zum Hauptmenü zu gelangen.");
 				chatResponse.put("closeContext", contextOff);
 			} else {
