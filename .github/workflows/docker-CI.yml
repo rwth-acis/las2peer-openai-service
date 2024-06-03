@@ -3,7 +3,7 @@ name: Docker Build and Push
 on:
   push:
 
-    branches: [ main, develop, biwibot]
+    branches: [ main, develop, refactor/remove-las2peer ]
 
 
 jobs:

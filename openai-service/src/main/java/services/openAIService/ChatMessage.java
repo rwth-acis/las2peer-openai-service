@@ -1,4 +1,4 @@
-package i5.las2peer.services.openAIService;
+package services.openAIService;
 
 public class ChatMessage {
 	public ChatMessage(String role, String content, String name) {

@@ -1,192 +1,81 @@
-package i5.las2peer.services.openAIService;
+package services.openAIService;
 
-import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.math.BigInteger;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.file.Files;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+// import java.sql.Connection;
+// import java.sql.PreparedStatement;
+// import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import org.apache.commons.io.IOUtils;
-import javax.imageio.ImageIO;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import java.nio.file.Paths;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriBuilder;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.dbcp2.BasicDataSource;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.java_websocket.util.Base64;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.knuddels.jtokkit.Encodings;
-import com.knuddels.jtokkit.api.Encoding;
-import com.knuddels.jtokkit.api.EncodingRegistry;
-import com.knuddels.jtokkit.api.EncodingType;
-import com.nimbusds.openid.connect.sdk.util.Resource;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestBody;
 
-import org.json.*;
-import org.web3j.abi.datatypes.Int;
-
-import i5.las2peer.connectors.webConnector.client.ClientResponse;
-import i5.las2peer.connectors.webConnector.client.MiniClient;
-import i5.las2peer.api.Context;
-import i5.las2peer.api.ManualDeployment;
-import i5.las2peer.api.logging.MonitoringEvent;
-import i5.las2peer.api.security.UserAgent;
-import i5.las2peer.logging.L2pLogger;
-import i5.las2peer.restMapper.RESTService;
-import i5.las2peer.restMapper.annotations.ServicePath;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Contact;
-import io.swagger.annotations.Info;
-import io.swagger.annotations.License;
-import io.swagger.annotations.SwaggerDefinition;
-import io.swagger.util.Json;
-import kotlin.contracts.Returns;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.ws.rs.core.UriBuilder;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
-import net.minidev.json.parser.ParseException;
-import net.minidev.json.JSONValue;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
 
+@Tag(name = "OpenAIService", description = "A service to make request to OpenAI API functions and connect to the Biwibot service.")
+@RestController
+@RequestMapping("/openai")
+public class OpenAIServiceController {
 
-// TODO Describe your own service
-/**
- * las2peer-Template-Service
- * 
- * This is a template for a very basic las2peer service that uses the las2peer WebConnector for RESTful access to it.
- * 
- * Note: If you plan on using Swagger you should adapt the information below in the SwaggerDefinition annotation to suit
- * your project. If you do not intend to provide a Swagger documentation of your service API, the entire Api and
- * SwaggerDefinition annotation should be removed.
- * 
- */
-// TODO Adjust the following configuration
-@Api
-@SwaggerDefinition(
-		info = @Info(
-				title = "las2peer OpenAI Service",
-				version = "1.0.0",
-				description = "A las2peer wrapper service for the social-bot-manager service to make request to OpenAI API functions and connect to the Biwibot service.",
-				termsOfService = "https://tech4comp.de/",
-				contact = @Contact(
-						name = "Samuel Kwong, Yue Yin",
-						email = "samuel.kwong@rwth-aachen.de, yue.yin@rwth-aachen.de"),
-				license = @License(
-						name = "CC0",
-						url = "https://github.com/rwth-acis/las2peer-openai-service/blob/main/LICENSE")))
-@ManualDeployment
-@ServicePath("/openai")
-public class OpenAIService extends RESTService {
-	private String pgsqlHost;
-	private String pgsqlPort;
-	private String pgsqlUser;
-	private String pgsqlPassword;
-	private String pgsqlDB;
+	@Autowired
+	OpenAIService openAIservice;
 
-	private static BasicDataSource dataSource;
-
-	private static HashMap<String, Boolean> isActive = new HashMap<String, Boolean>();
-
-	private void initDB() {
-		if (dataSource == null) {
-            dataSource = new BasicDataSource();
-            dataSource.setDriverClassName("org.postgresql.Driver");
-            dataSource.setUrl("jdbc:postgresql://"+pgsqlHost+":"+pgsqlPort+"/"+pgsqlDB);
-            dataSource.setUsername(pgsqlUser);
-            dataSource.setPassword(pgsqlPassword);
-
-            // Set connection pool properties
-            dataSource.setInitialSize(5);
-            dataSource.setMaxTotal(10);
-        }
+	@Operation(tags = {"test"}, summary = "Returns success if it works.")
+	@ApiResponses({ 
+		@ApiResponse(responseCode = "200", description = "Success"), 
+		@ApiResponse(responseCode = "500", description = "Fail.")})
+	@GetMapping("/test123")
+	public String test(@RequestParam(value = "id", defaultValue = "0") int id) {
+		System.out.println("OK." + id);
+		String s = "OK";
+		return s;
 	}
-
-
-	EncodingRegistry registry = Encodings.newDefaultEncodingRegistry();
-	Encoding encoding = registry.getEncoding(EncodingType.CL100K_BASE);
 
 	/*
 	 * Template of a post function.
 	 * 
 	 * @return Returns the response generated from openAI
 	*/
-	@POST
-	@Path("/test")
-	@Produces(MediaType.APPLICATION_JSON)
-	@ApiResponses(
-			value = { @ApiResponse(
-					code = HttpURLConnection.HTTP_OK,
-					message = "A test response from OpenAI") })
-	@ApiOperation(
-			value = "test",
-			notes = "Method that returns a response generated from openAI")
-	public Response test(String body) {
+	@Operation(tags = {"test"}, description = "Method that returns a response generated from openAI")
+	@ApiResponses({ 
+		@ApiResponse(responseCode = "200" , description = "A test response from OpenAI",content = {@Content(mediaType = "application/json")} ),
+		@ApiResponse(responseCode = "500", description = "Response failed.") 
+	})
+	@PostMapping("/test")
+	public ResponseEntity<JSONObject> test(@RequestBody JSONObject body) {
 		JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
-		JSONObject jsonBody = null;
 		JSONObject openaiBody = new JSONObject();
 		JSONObject chatResponse = new JSONObject();
-		
+		String model = body.getAsString("model");
 		try {
-			jsonBody = (JSONObject) parser.parse(body);
-			// Get the model 
-			String model = jsonBody.getAsString("model");
 			String prompt = "Who was the first president of the USA?";
 				
 			String url = "https://api.openai.com/v1/chat/completions";
-			MiniClient client = new MiniClient();
-			client.setConnectorEndpoint(url);
 			
-			String openai_api_key = jsonBody.getAsString("openaiKey");
+			String openai_api_key = body.getAsString("openaikey");
 			
 			JSONArray messagesJsonArray = new JSONArray();
 			HashMap<String, String> userMsgMap = new HashMap<String,String>();
@@ -204,14 +93,14 @@ public class OpenAIService extends RESTService {
 			List<ChatMessage> messages = new ArrayList<ChatMessage>();
 		    for (int i = 0 ; i < messagesJsonArray.size(); i++) {
 		        JSONObject jsonMsgMap = (JSONObject) messagesJsonArray.get(i);
-		        HashMap<String, String> msgMap = toMap(jsonMsgMap);
+		        HashMap<String, String> msgMap = openAIservice.toMap(jsonMsgMap);
 		        String role = msgMap.get("role");
 		        String content = msgMap.get("content");
 		        String name = msgMap.get("name");
 		        ChatMessage chatMsg = new ChatMessage(role, content, name);
 		        messages.add(chatMsg);
 		    }
-			int tokens = countMessageTokens(registry, model, messages);
+			int tokens = openAIservice.countMessageTokens(openAIservice.registry, model, messages);
 			System.out.println("TOKENS TO BE USED: " + tokens);
 			
             HttpClient httpClient = HttpClient.newHttpClient();
@@ -234,24 +123,21 @@ public class OpenAIService extends RESTService {
     			if (choices == null) {
     				textResponse = response.toString();
     			} else {
-    				// System.out.println(choices);
     				JSONObject choicesObj = (JSONObject) choices.get(0);
     				JSONObject message = (JSONObject) choicesObj.get("message");
-    				// System.out.println(message);
     				textResponse = message.getAsString("content");
-    				//chatResponse.put("openai", "True");
-    				// System.out.println(textResponse);
+    				chatResponse.put("openai", "True");
     			}
 				chatResponse.put("tokens", tokens);
     			chatResponse.put("text", textResponse);
             } else {
                 chatResponse.put("text", response.toString());
             }
-        } catch (ParseException | IOException | InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             chatResponse.appendField("text", "An error has occurred.");
         }
-		return Response.ok().entity(chatResponse).build();
+		return ResponseEntity.ok(chatResponse);
 	}
 
 	/*
@@ -259,36 +145,27 @@ public class OpenAIService extends RESTService {
 	 * 
 	 * @return Returns the response generated from openAI
 	*/
-	@POST
-	@Path("/personalize")
-	@Produces(MediaType.APPLICATION_JSON)
-	@ApiResponses(
-			value = { @ApiResponse(
-					code = HttpURLConnection.HTTP_OK,
-					message = "Personalized response generated by OpenAI") })
-	@ApiOperation(
-			value = "personalize",
-			notes = "Method that returns a response generated from openAI")
-	public Response personalize(String body) {
-		JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
-		JSONObject jsonBody = null;
+	@Operation(tags = {"personalize"}, description = "Method that returns a response generated from openAI")
+	@ApiResponses({ 
+		@ApiResponse(responseCode = "200" , description = "Personalized response generated by OpenAI",content = {@Content(mediaType = "application/json")} ),
+		@ApiResponse(responseCode = "500", description = "Response failed.") 
+	})
+	@PostMapping("/personalize")
+	public ResponseEntity<JSONObject> personalize(@RequestBody JSONObject body) {
+		JSONParser parser = new JSONParser();
 		JSONObject openaiBody = new JSONObject();
 		JSONObject chatResponse = new JSONObject();
 		
 		try {
-			jsonBody = (JSONObject) parser.parse(body);
 			// Get the model 
-			String model = jsonBody.getAsString("model");
+			String model = body.getAsString("model");
 			// Get the system messages json array from the body, specified in the bot model
-			JSONArray messagesJsonArray = (JSONArray) jsonBody.get("messages");
+			JSONArray messagesJsonArray = (JSONArray) body.get("messages");
 			// Get the conversation history from the body
-			JSONArray conversationPathJsonArray = (JSONArray) jsonBody.get("conversationPath");
-				
+			JSONArray conversationPathJsonArray = (JSONArray) body.get("conversationPath");
 			String url = "https://api.openai.com/v1/chat/completions";
-			MiniClient client = new MiniClient();
-			client.setConnectorEndpoint(url);
 
-			String openai_api_key = jsonBody.getAsString("openaiKey");
+			String openai_api_key = body.getAsString("openaiKey");
 			
 			// TODO: Prepare openaiBody 
 			//messagesJsonArray already formatted as [{"role":"system", "content":"You are a helpful assistant"}]
@@ -313,7 +190,7 @@ public class OpenAIService extends RESTService {
 			    }
 				
 				JSONObject jsonUserMsgMap = (JSONObject) conversationPathJsonArray.get(lastUserMsgIdx);
-				HashMap<String, String> userMsgMap = toMap(jsonUserMsgMap);
+				HashMap<String, String> userMsgMap = openAIservice.toMap(jsonUserMsgMap);
 				userMsgMap.put("role", "system");
 				userMsgMap.put("name", "example_user");
 				JSONObject newJsonUserMsgMap = new JSONObject(userMsgMap);
@@ -324,7 +201,7 @@ public class OpenAIService extends RESTService {
 			    {
 					JSONObject jsonBotMsgMap = (JSONObject) conversationPathJsonArray.get(i);
 					botMessagesJsonArray.add(jsonBotMsgMap);
-					HashMap<String, String> botMsgMap = toMap(jsonBotMsgMap);
+					HashMap<String, String> botMsgMap = openAIservice.toMap(jsonBotMsgMap);
 					botMsgMap.put("role", "system");
 					botMsgMap.put("name", "example_assistant");
 					JSONObject newJsonBotMsgMap = new JSONObject(botMsgMap);
@@ -351,20 +228,19 @@ public class OpenAIService extends RESTService {
 			
 			openaiBody.put("model", model);
 			openaiBody.put("messages", messagesJsonArray);
-			System.out.println(messagesJsonArray);
 			
 			// Count tokens
 			List<ChatMessage> messages = new ArrayList<ChatMessage>();
 		    for (int i = 0 ; i < messagesJsonArray.size(); i++) {
 		        JSONObject jsonMsgMap = (JSONObject) messagesJsonArray.get(i);
-		        HashMap<String, String> msgMap = toMap(jsonMsgMap);
+		        HashMap<String, String> msgMap = openAIservice.toMap(jsonMsgMap);
 		        String role = msgMap.get("role");
 		        String content = msgMap.get("content");
 		        String name = msgMap.get("name");
 		        ChatMessage chatMsg = new ChatMessage(role, content, name);
 		        messages.add(chatMsg);
 		    }
-			int tokens = countMessageTokens(registry, model, messages);
+			int tokens = openAIservice.countMessageTokens(openAIservice.registry, model, messages);
 			System.out.println("TOKENS TO BE USED: " + tokens);
 			
             HttpClient httpClient = HttpClient.newHttpClient();
@@ -400,26 +276,21 @@ public class OpenAIService extends RESTService {
             } else {
                 chatResponse.put("text", response.toString());
             }
-        } catch (ParseException | IOException | InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             chatResponse.appendField("text", "An error has occurred.");
         }
-		return Response.ok().entity(chatResponse).build();
+		return ResponseEntity.ok(chatResponse);
 	}
-	
-	@POST
-	@Path("/chat")
-	@Produces(MediaType.APPLICATION_JSON)
-	@ApiResponses(
-			value = { @ApiResponse(
-					code = HttpURLConnection.HTTP_OK,
-					message = "Handling default messages from the Bot Model") })
-	@ApiOperation(
-			value = "chat",
-			notes = "Returns a response by OpenAI and classifies the intent")
-	public Response chat(String body) {
-		JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
-		JSONObject jsonBody = null;
+
+	@Operation(tags = {"chat"}, description = "Returns a response by OpenAI and classifies the intent")
+	@ApiResponses({ 
+		@ApiResponse(responseCode = "200" , description = "Handling default messages from the Bot Model",content = {@Content(mediaType = "application/json")} ),
+		@ApiResponse(responseCode = "500", description = "Response failed.") 
+	})
+	@PostMapping("/chat")
+	public ResponseEntity<JSONObject> chat(@RequestBody JSONObject body) {
+		JSONParser parser = new JSONParser();
 		JSONObject openaiBody = new JSONObject();
 		JSONObject intentBody = new JSONObject();
 		JSONObject chatResponse = new JSONObject();
@@ -427,24 +298,23 @@ public class OpenAIService extends RESTService {
 		JSONObject costsIntent = new JSONObject();
 
 		try {
-			jsonBody = (JSONObject) parser.parse(body);
-			String model = jsonBody.getAsString("model");
-			String openaiKey = jsonBody.getAsString("openaiKey");
-			String systemMessage = jsonBody.getAsString("systemMessage");
-			String userMessage = jsonBody.getAsString("msg");
-			String user_email = jsonBody.getAsString("user");
+			String model = body.getAsString("model");
+			String openaiKey = body.getAsString("openaiKey");
+			String systemMessage = body.getAsString("systemMessage");
+			String userMessage = body.getAsString("msg");
+			String user_email = body.getAsString("user");
 			JSONArray messagesJsonArray = new JSONArray();
 			JSONObject system = new JSONObject();
 
 			//for intent classification
-			String classifyIntent = jsonBody.getAsString("classifyIntent");
-			String in_service_context = jsonBody.getAsString("in-service-context");
+			String classifyIntent = body.getAsString("classifyIntent");
+			// String in_service_context = body.getAsString("in-service-context");
 			JSONObject remarks = new JSONObject(costsIntent);
 			remarks.put("user", user_email);
-			remarks.put("in-service-context", in_service_context);
-			String caseID = jsonBody.getAsString("caseID");
-			String resource = jsonBody.getAsString("Resource");
-			String time = jsonBody.getAsString("TIME_OF_EVENT");
+			// remarks.put("in-service-context", in_service_context);
+			// String caseID = body.getAsString("caseID");
+			// String resource = body.getAsString("Resource");
+			// String time = body.getAsString("TIME_OF_EVENT");
 			JSONArray intentMessageJsonArray = new JSONArray();
 			JSONObject intent = new JSONObject();
 
@@ -463,8 +333,8 @@ public class OpenAIService extends RESTService {
 				intentBody.put("model", model);
 
 				String url = "https://api.openai.com/v1/chat/completions";
-				MiniClient client = new MiniClient();
-				client.setConnectorEndpoint(url);
+				// MiniClient client = new MiniClient();
+				// client.setConnectorEndpoint(url);
 				
 				HttpClient httpClientIntent = HttpClient.newHttpClient();
 				HttpRequest httpRequestIntent = HttpRequest.newBuilder()
@@ -495,7 +365,7 @@ public class OpenAIService extends RESTService {
 					}
 
 					chatResponse.put("Intent", textResponseIntent);
-					costsIntent = costCalculation(responseIntent);
+					costsIntent = openAIservice.costCalculation(responseIntent);
 					chatResponse.put("costsIntent", costsIntent);
 
 					//Save data to SQL database
@@ -556,8 +426,8 @@ public class OpenAIService extends RESTService {
 			openaiBody.put("model", model);
 			
 			String url = "https://api.openai.com/v1/chat/completions";
-			MiniClient client = new MiniClient();
-			client.setConnectorEndpoint(url);
+			// MiniClient client = new MiniClient();
+			// client.setConnectorEndpoint(url);
 			
 			HttpClient httpClient = HttpClient.newHttpClient();
             HttpRequest httpRequest = HttpRequest.newBuilder()
@@ -586,7 +456,7 @@ public class OpenAIService extends RESTService {
 					System.out.println(textResponse);
 				}
 				chatResponse.put("text", textResponse);
-				costs = costCalculation(response);
+				costs = openAIservice.costCalculation(response);
 				chatResponse.put("costs", costs);
 			} else {
 				chatResponse.put("text", response.toString());
@@ -597,21 +467,21 @@ public class OpenAIService extends RESTService {
 			chatResponse.appendField("text", "An error has occurred.");
 		}
 
-		return Response.ok().entity(chatResponse).build();
+		return ResponseEntity.ok(chatResponse);
 	}
 
 	private static HashMap<String,String> selectedMaterial = new HashMap<String,String> ();
 
-	@GET
-	@Path("/biwibotMaterials")
-	@Produces(MediaType.APPLICATION_JSON)
-	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "") })
-	@ApiOperation(value = "biwibotMaterials", notes = "Returns all available materials to select from")
-	public Response biwibotMaterials(@QueryParam("channel") int channel) {
-		initDB();
-		Connection conn = null;
-		PreparedStatement stmt = null;
-		ResultSet rs = null;
+	@Operation(tags = {"biwibotMaterials"}, summary = "Returns all available materials to select from.")
+	@ApiResponses({ 
+		@ApiResponse(responseCode = "200", description = "Success", content = {@Content(mediaType = "application/json")}), 
+		@ApiResponse(responseCode = "500", description = "Fail.")})
+	@GetMapping("/biwibotMaterials")
+	public ResponseEntity<JSONObject> biwibotMaterials(@RequestParam(value = "channel", defaultValue = "0") int channel){
+		openAIservice.initDB();
+		// Connection conn = null;
+		// PreparedStatement stmt = null;
+		// ResultSet rs = null;
 		JSONArray jsonArray = new JSONArray();
 		JSONArray interactiveElements = new JSONArray();
 		JSONObject lecture = new JSONObject();
@@ -694,8 +564,7 @@ public class OpenAIService extends RESTService {
 		// 		interactiveElements.add(jsonObject);
 		// 	}
 		// } catch (SQLException e) {
-		// 	// TODO Auto-generated catch block
-		// 	e.printStackTrace();
+			// 	e.printStackTrace();
 		// } finally {
 		// 	try {
 		// 		if (rs != null) {
@@ -716,15 +585,16 @@ public class OpenAIService extends RESTService {
 		response.put("data", jsonArray);
 		response.put("interactiveElements", interactiveElements);
 		response.put("closeContext", true);
-		return Response.ok().entity(response.toString()).build();
+		return ResponseEntity.ok(response);
 	}
 
-	@POST
-	@Path("/setBiwibotMaterials")
-	@Produces(MediaType.APPLICATION_JSON)
-	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "") })
-	@ApiOperation(value = "setBiwibotMaterial", notes = "set the material for user")
-	public Response setBiwibotMaterials(@FormDataParam("material") String material, @FormDataParam("channel") String channel) {
+	@Operation(tags = {"setBiwibotMaterials"}, description = "Set the material for user.")
+	@ApiResponses({ 
+		@ApiResponse(responseCode = "200" , description = "Sets the selected materials and respond with set.",content = {@Content(mediaType = "application/json")} ),
+		@ApiResponse(responseCode = "500", description = "Setting materials failed.") 
+	})
+	@PostMapping("/setBiwibotMaterials")
+	public ResponseEntity<JSONObject> setBiwibotMaterials(@RequestParam("material") String material, @RequestParam("channel") String channel) {
 		//Clear hashmap after some time?
 		selectedMaterial.put(channel, material);
 		System.out.println("Selected Materials are: " + selectedMaterial.toString());
@@ -732,24 +602,17 @@ public class OpenAIService extends RESTService {
 		response.put("message", "Material " + material + "set.");
 		response.put("material", material);
 		response.put("closeContext", true);
-		return Response.ok().entity(response.toString()).build();
+		return ResponseEntity.ok(response);
 	}
 
-	private Boolean responseBiwi = false;
-	private JSONObject response = new JSONObject();
 
-	@POST
-	@Path("/biwibot")
-	@Produces(MediaType.APPLICATION_JSON)
-	@ApiResponses(
-		value = { 
-				@ApiResponse(
-					code = HttpURLConnection.HTTP_OK,
-					message = "Connected.")})
-	@ApiOperation(
-			value = "Get the chat response from biwibot",
-			notes = "Returns the chat response from biwibot")
-	public Response biwibot(@FormDataParam("msg") String msg, @FormDataParam("channel") String channel, @FormDataParam("sbfmUrl") @DefaultValue("default") String sbfmUrl, @FormDataParam("material") @DefaultValue("default") String material) throws IOException, InterruptedException {
+	@Operation(tags = {"biwibot"}, description = "Returns the chat response from biwibot.")
+	@ApiResponses({ 
+		@ApiResponse(responseCode = "200" , description = "Get the chat response from biwibot.",content = {@Content(mediaType = "application/json")} ),
+		@ApiResponse(responseCode = "500", description = "Getting response failed.") 
+	})
+	@PostMapping("/biwibot")
+	public ResponseEntity<JSONObject> biwibot(@RequestParam("msg") String msg, @RequestParam("channel") String channel, @RequestParam(value="sbfmUrl", defaultValue = "default") String sbfmUrl, @RequestParam(value = "material", defaultValue = "default") String material) throws IOException, InterruptedException {
 		System.out.println("Msg:" + msg);
 		System.out.println("Channel:" + channel);
 		System.out.println("Material:" + material);
@@ -767,61 +630,59 @@ public class OpenAIService extends RESTService {
 		} else {
 			newEvent.put("material", "None");
 		}
-		System.out.println(newEvent);
 		if (!sbfmUrl.equals("default")) {
-			System.out.println(sbfmUrl);
-			if (isActive.containsKey(orgaChannel)) {
-				if(isActive.getOrDefault(orgaChannel, false) && !msg.startsWith("!")) {
-					response.put("AIResponse", "Einen Moment bitte, ich verarbeite noch deine erste Nachricht.");
-					response.put("closeContext", false);
-					return Response.ok().entity(response.toJSONString()).build();
+			if (openAIservice.isActive.containsKey(orgaChannel)) {
+				if(openAIservice.isActive.getOrDefault(orgaChannel, false) && !msg.startsWith("!")) {
+					openAIservice.response.put("AIResponse", "Einen Moment bitte, ich verarbeite noch deine erste Nachricht.");
+					openAIservice.response.put("closeContext", false);
+					return ResponseEntity.ok(openAIservice.response);
 				} else if (msg.startsWith("!")) {
 					exit.appendField("message", "!exit");
-					RESTcallBack(sbfmUrl, exit);
-					response.appendField("AIResponse", "Nutze bitte das X im Eingabefeld, um zum Hauptmenü zu gelangen.");
-					response.appendField("closeContext", true);
-					return Response.ok().entity(response.toString()).build();
+					openAIservice.RESTcallBack(sbfmUrl, exit);
+					openAIservice.response.appendField("AIResponse", "Nutze bitte das X im Eingabefeld, um zum Hauptmenü zu gelangen.");
+					openAIservice.response.appendField("closeContext", true);
+					return ResponseEntity.ok(openAIservice.response);
 				}
 			}
 			
 			if (msg.contains("!welcome")) {
 				exit.appendField("message", "!exit");
-				RESTcallBack(sbfmUrl, exit);
-				response.appendField("AIResponse", "Nutze bitte das X im Eingabefeld, um zum Hauptmenü zu gelangen.");
-				response.appendField("closeContext", true);
-				return Response.ok().entity(response.toString()).build();
+				openAIservice.RESTcallBack(sbfmUrl, exit);
+				openAIservice.response.appendField("AIResponse", "Nutze bitte das X im Eingabefeld, um zum Hauptmenü zu gelangen.");
+				openAIservice.response.appendField("closeContext", true);
+				return ResponseEntity.ok(openAIservice.response);
 			}
 
 			if (!msg.startsWith("!")){
-				isActive.put(channel, true);
+				openAIservice.isActive.put(channel, true);
 				//call biwibot
-				biwibotAsync(msg, orgaChannel, sbfmUrl, material);
+				openAIservice.biwibotAsync(msg, orgaChannel, sbfmUrl, material);
 
 				ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-				if (!responseBiwi) {
-					response.appendField("AIResponse", "Bitte warte einen Moment ich denke darüber nach.");
-					response.appendField("channel", channel);
-					response.appendField("closeContext", false);
+				if (!openAIservice.responseBiwi) {
+					openAIservice.response.appendField("AIResponse", "Bitte warte einen Moment ich denke darüber nach.");
+					openAIservice.response.appendField("channel", channel);
+					openAIservice.response.appendField("closeContext", false);
 
 					scheduler.scheduleAtFixedRate(() -> {
-						RESTcallBack(sbfmUrl, response);
-						if (responseBiwi) {
-							response.clear();
-							responseBiwi=false;
+						openAIservice.RESTcallBack(sbfmUrl, openAIservice.response);
+						if (openAIservice.responseBiwi) {
+							openAIservice.response.clear();
+							openAIservice.responseBiwi=false;
 							scheduler.shutdown();
 						}
 					}, 0, 20, TimeUnit.SECONDS);
 				}
 
-				return Response.ok().entity(response.toString()).build();
+				return ResponseEntity.ok(openAIservice.response);
 			} else {
 				exit.appendField("message", "!exit");
 				exit.appendField("closeContext", true);
-				RESTcallBack(sbfmUrl, exit);
-				response.appendField("AIResponse", "Exit wird ausgeführt.");
-				response.appendField("closeContext", true);
-				return Response.ok().entity(response.toString()).build();
+				openAIservice.RESTcallBack(sbfmUrl, exit);
+				openAIservice.response.appendField("AIResponse", "Exit wird ausgeführt.");
+				openAIservice.response.appendField("closeContext", true);
+				return ResponseEntity.ok(openAIservice.response);
 			}
 
 		} else {
@@ -830,7 +691,7 @@ public class OpenAIService extends RESTService {
 				chatResponse.appendField("AIResponse", "Nutze bitte das X im Eingabefeld, um zum Hauptmenü zu gelangen.");
 				chatResponse.appendField("closeContext", contextOff);
 				
-				return Response.ok().entity(chatResponse.toString()).build();
+				return ResponseEntity.ok(openAIservice.response);
 			}
 
 			if(!msg.equals("!exit")){
@@ -840,7 +701,7 @@ public class OpenAIService extends RESTService {
 					chatResponse.put("AIenhanced", true);
 					newEvent.put("question", question);
 					newEvent.put("channel", channel);
-					System.out.print(newEvent);
+					System.out.println("Start calling biwibot...");
 					// Make the POST request to localhost:5000/chat
 					String url = "https://biwibot.tech4comp.dbis.rwth-aachen.de/generate_response";
 					HttpClient httpClient = HttpClient.newHttpClient();
@@ -892,212 +753,8 @@ public class OpenAIService extends RESTService {
 			}
 		}
 
-		return Response.ok().entity(chatResponse.toString()).build();
+		return ResponseEntity.ok(openAIservice.response);
 	}
 
-	public void biwibotAsync(@FormDataParam("msg") String msg, @FormDataParam("channel") String orgaChannel, @FormDataParam("sbfmUrl") String sbfmUrl, @FormDataParam("material") @DefaultValue ("default") String material){
-		System.out.println("Msg:" + msg);
-		System.out.println("Channel:" + orgaChannel);
-		Boolean contextOn = false;
-		JSONObject chatResponse = new JSONObject();
-		JSONObject newEvent = new JSONObject();
-		JSONObject error = new JSONObject();
-		String channel = orgaChannel;
-		try {
-			new Thread(new Runnable() {
-				public void run() {
-					try {
-						System.out.println("Thread started.");
-						String question = msg;
-						response.put("channel", channel);
-						response.put("AIenhanced", true);
-						chatResponse.put("channel", channel);
-						error.put("channel", channel);
-						newEvent.put("question", question);
-						newEvent.put("channel", channel);
-						if (!material.equals("default")) {
-							newEvent.put("material", material);
-						} else {
-							newEvent.put("material", "None");
-						}
-						System.out.print(newEvent);
-						// Make the POST request to localhost:5000/chat
-						String url = "https://biwibot.tech4comp.dbis.rwth-aachen.de/generate_response";
-						HttpClient httpClient = HttpClient.newHttpClient();
-						HttpRequest httpRequest = HttpRequest.newBuilder()
-								.uri(UriBuilder.fromUri(url).build())
-								.header("Content-Type", "application/json")
-								.POST(HttpRequest.BodyPublishers.ofString(newEvent.toJSONString()))
-								.build();
-
-						// Send the request
-						HttpResponse<String> serviceResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-						int responseCode = serviceResponse.statusCode();
-
-						if (responseCode == HttpURLConnection.HTTP_OK) {
-							responseBiwi = true;
-							System.out.println("Response from service: " + serviceResponse.body());
-							response.appendField("closeContext", contextOn);
-							response.appendField("AIResponse", serviceResponse.body());
-							chatResponse.appendField("closeContext", contextOn);
-							chatResponse.appendField("AIResponse", serviceResponse.body());
-							System.out.println(chatResponse);
-							// RESTcallBack(sbfmUrl, chatResponse);
-						} else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
-							responseBiwi = true;
-							// Handle unsuccessful response
-							response.appendField("AIResponse", "Biwibot error has occured.");
-							error.appendField("error", "Biwibot error has occured.");
-							RESTcallBack(sbfmUrl, error);
-						}
-						//System.out.println(chatResponse);
-						isActive.put(channel, false);
-					} catch ( IOException | InterruptedException e) {
-						responseBiwi = true;
-						e.printStackTrace();
-						error.appendField("error", "An error has occurred.");
-						isActive.put(channel, false);
-						RESTcallBack(sbfmUrl, error);
-					} catch (Throwable e) {
-						responseBiwi = true;
-						e.printStackTrace();
-						error.appendField("error", "An unknown error has occurred.");
-						isActive.put(channel, false);
-						RESTcallBack(sbfmUrl, error);
-					}
-				}
-			}).start();
-		} catch (Exception e) {
-			e.printStackTrace();
-			isActive.put(channel, false);
-			// chatResponse.appendField("text","An error has occured (Exception).");
-			return;
-		} catch (Throwable e) {
-			e.printStackTrace();
-			isActive.put(channel,false);
-			// chatResponse.appendField("text", "An unknown error has occured.");
-			return;
-		}
-
-		return;
-	}
-
-	public void callBack(String callbackUrl, String channel, JSONObject body, String email){
-		try {
-			String token = "TestBot:TestBot";    
-			System.out.println("Starting callback to botmanager with url: " + callbackUrl+ "/"+ "sendMessageToRocketChatCallback/" + token + "/" + email + "/" + channel);
-			Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
-			String mp = null;
-			System.out.println(body);
-			mp = body.toJSONString();
-			WebTarget target = textClient
-					.target(callbackUrl + "/" + "sendMessageToRocketChatCallback" + "/" + token + "/" + email + "/" + channel);
-			Response response = target.request()
-					.post(javax.ws.rs.client.Entity.entity(mp, MediaType.APPLICATION_JSON));
-					String test = response.readEntity(String.class);
-			System.out.println("Finished callback to botmanager with response: " + test);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void RESTcallBack(String callbackUrl, JSONObject body){
-		try {
-			System.out.println("Starting callback to botmanager with url: " + callbackUrl + "/AsyncMessage");
-			Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
-			String mp = null;
-			System.out.println(body);
-			mp = body.toJSONString();
-			WebTarget target = textClient
-					.target(callbackUrl
-					+ "/AsyncMessage");
-			Response response = target.request()
-					.post(javax.ws.rs.client.Entity.entity(mp, MediaType.APPLICATION_JSON));
-					String test = response.readEntity(String.class);
-			System.out.println("Finished callback to botmanager with response: " + test);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-
-	public static HashMap<String, String> toMap(JSONObject jsonobj) {
-        HashMap<String, String> map = new HashMap<String, String>();
-        for (String key : jsonobj.keySet()) {
-            String value = jsonobj.getAsString(key);
-            map.put(key, value);
-        }   return map;
-    }
-	
-	private int countMessageTokens(
-	        EncodingRegistry registry,
-	        String model,
-	        List<ChatMessage> messages // consists of role, content and an optional name
-	) {
-	    Encoding encoding = registry.getEncodingForModel(model).orElseThrow();
-	    int tokensPerMessage;
-	    int tokensPerName;
-	    if (model.startsWith("gpt-4")) {
-	        tokensPerMessage = 3;
-	        tokensPerName = 1;
-	    } else if (model.startsWith("gpt-3.5-turbo")) {
-	        tokensPerMessage = 4; // every message follows <|start|>{role/name}\n{content}<|end|>\n
-	        tokensPerName = -1; // if there's a name, the role is omitted
-	    } else {
-	        throw new IllegalArgumentException("Unsupported model: " + model);
-	    }
-
-	    int sum = 0;
-	    for (final var message : messages) {
-	        sum += tokensPerMessage;
-	        sum += encoding.countTokens(message.getContent());
-	        sum += encoding.countTokens(message.getRole());
-	        if (message.hasName()) {
-	            sum += encoding.countTokens(message.getName());
-	            sum += tokensPerName;
-	        }
-	    }
-
-	    sum += 3; // every reply is primed with <|start|>assistant<|message|>
-
-	    return sum;
-	}
-
-	private JSONObject costCalculation(JSONObject response){
-		JSONObject costs = new JSONObject();
-		double cost = 0;
-		JSONObject usage = (JSONObject) response.get("usage");
-		System.out.println(usage);
-		int promptTokens = Integer.parseInt(usage.getAsString("prompt_tokens"));
-		int completionTokens = Integer.parseInt(usage.getAsString("completion_tokens"));
-		int totalTokens = Integer.parseInt(usage.getAsString("total_tokens"));
-		String model = response.getAsString("model");
-
-		if (model.startsWith("gpt-3.5-turbo")) {
-			double inputCosts = promptTokens * 0.0015;
-			double outputCosts = completionTokens * 0.002;
-			cost = inputCosts + outputCosts;
-		} else if (model.startsWith("gpt-4")) {
-			double inputCosts = promptTokens * 0.03;
-			double outputCosts = completionTokens * 0.06;
-			cost = inputCosts + outputCosts;
-		} else if (model.startsWith("gpt-3.5-turbo-16k")) {
-			double inputCosts = promptTokens * 0.003;
-			double outputCosts = completionTokens * 0.004;
-			cost =	inputCosts + outputCosts;
-		} else if (model.startsWith("gpt-4-32k")) {
-			double inputCosts = promptTokens * 0.06;
-			double outputCosts = completionTokens * 0.12;
-			cost = inputCosts + outputCosts;
-		}
-
-		costs.appendField("model", model);
-		costs.appendField("prompt_tokens", promptTokens);
-		costs.appendField("completion_tokens", completionTokens);
-		costs.appendField("total_tokens", totalTokens);
-		costs.appendField("total_cost", cost);
-		
-		return costs;
-	}
 
 }
