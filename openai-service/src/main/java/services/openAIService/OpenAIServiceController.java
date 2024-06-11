@@ -691,7 +691,7 @@ public class OpenAIServiceController {
 				chatResponse.appendField("AIResponse", "Nutze bitte das X im Eingabefeld, um zum Hauptmenü zu gelangen.");
 				chatResponse.appendField("closeContext", contextOff);
 				
-				return ResponseEntity.ok(openAIservice.response);
+				return ResponseEntity.ok(chatResponse);
 			}
 
 			if(!msg.equals("!exit")){
@@ -753,7 +753,7 @@ public class OpenAIServiceController {
 			}
 		}
 
-		return ResponseEntity.ok(openAIservice.response);
+		return ResponseEntity.ok(chatResponse);
 	}
 
 
