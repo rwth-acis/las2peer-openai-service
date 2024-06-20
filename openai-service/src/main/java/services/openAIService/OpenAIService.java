@@ -8,6 +8,7 @@ import java.net.http.HttpResponse;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.client.Client;
@@ -22,38 +23,21 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import org.springframework.stereotype.Service;
 
-import org.apache.commons.dbcp2.BasicDataSource;
+// import org.apache.commons.dbcp2.BasicDataSource;
 
 import com.knuddels.jtokkit.Encodings;
 import com.knuddels.jtokkit.api.Encoding;
 import com.knuddels.jtokkit.api.EncodingRegistry;
 import com.knuddels.jtokkit.api.EncodingType;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONObject;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class OpenAIService {
-    private String pgsqlHost;
-	private String pgsqlPort;
-	private String pgsqlUser;
-	private String pgsqlPassword;
-	private String pgsqlDB;
-
-	private static BasicDataSource dataSource;
-
-    public void initDB() {
-		if (dataSource == null) {
-            dataSource = new BasicDataSource();
-            dataSource.setDriverClassName("org.postgresql.Driver");
-            dataSource.setUrl("jdbc:postgresql://"+pgsqlHost+":"+pgsqlPort+"/"+pgsqlDB);
-            dataSource.setUsername(pgsqlUser);
-            dataSource.setPassword(pgsqlPassword);
-
-            // Set connection pool properties
-            dataSource.setInitialSize(5);
-            dataSource.setMaxTotal(10);
-        }
-	}
 
     EncodingRegistry registry = Encodings.newDefaultEncodingRegistry();
 	Encoding encoding = registry.getEncoding(EncodingType.CL100K_BASE);

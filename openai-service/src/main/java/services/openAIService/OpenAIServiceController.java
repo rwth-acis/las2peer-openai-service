@@ -5,9 +5,7 @@ import java.net.HttpURLConnection;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-// import java.sql.Connection;
-// import java.sql.PreparedStatement;
-// import java.sql.ResultSet;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -311,10 +309,7 @@ public class OpenAIServiceController {
 			// String in_service_context = body.getAsString("in-service-context");
 			JSONObject remarks = new JSONObject(costsIntent);
 			remarks.put("user", user_email);
-			// remarks.put("in-service-context", in_service_context);
-			// String caseID = body.getAsString("caseID");
-			// String resource = body.getAsString("Resource");
-			// String time = body.getAsString("TIME_OF_EVENT");
+
 			JSONArray intentMessageJsonArray = new JSONArray();
 			JSONObject intent = new JSONObject();
 
@@ -333,8 +328,6 @@ public class OpenAIServiceController {
 				intentBody.put("model", model);
 
 				String url = "https://api.openai.com/v1/chat/completions";
-				// MiniClient client = new MiniClient();
-				// client.setConnectorEndpoint(url);
 				
 				HttpClient httpClientIntent = HttpClient.newHttpClient();
 				HttpRequest httpRequestIntent = HttpRequest.newBuilder()
@@ -368,39 +361,7 @@ public class OpenAIServiceController {
 					costsIntent = openAIservice.costCalculation(responseIntent);
 					chatResponse.put("costsIntent", costsIntent);
 
-					//Save data to SQL database
-					// PreparedStatement stmt = null;
-					// Connection conn = null;
-					// try {
-					// 	conn = datasource.getConnection();
 
-					// 	stmt = conn.prepareStatement("INSERT INTO MESSAGE (`Event`, `REMARKS`, `CASE_ID`, `ACTIVITY_NAME`, `RESOURCE`, `RESOURCE_TYPE`, `TIME_OF_EVENT`) VALUES (?, ?, ?)");
-					// 	stmt.setString(1, "SERVICE_CUSTOM_MESSAGE_1");
-					// 	stmt.setString(2, remarks.toJSONString());
-					// 	stmt.setString(3, caseID);
-					// 	stmt.setString(4, textResponseIntent);
-					// 	stmt.setString(5, in_service_context);
-					// 	stmt.setString(6, resource);
-					// 	stmt.setString(7, "bot");
-					// 	stmt.setString(8, time);
-					// 	stmt.executeUpdate();
-					// } catch (SQLException e) {
-					// 	e.printStackTrace();
-					// } finally {
-					// 	try {
-					// 		if (stmt != null)
-					// 			stmt.close();
-					// 	} catch (Exception e) {
-					// 		e.printStackTrace();
-					// 	}
-					// 	;
-					// 	try {
-					// 		if (conn != null) 
-					// 			conn.close();
-					// 	} catch (Exception e) {
-					// 		e.printStackTrace();
-					// 	}
-					// }
 				} else {
 					chatResponse.put("intent", responseIntent.toString());
 				}
@@ -478,10 +439,7 @@ public class OpenAIServiceController {
 		@ApiResponse(responseCode = "500", description = "Fail.")})
 	@GetMapping("/biwibotMaterials")
 	public ResponseEntity<JSONObject> biwibotMaterials(@RequestParam(value = "channel", defaultValue = "0") int channel){
-		openAIservice.initDB();
-		// Connection conn = null;
-		// PreparedStatement stmt = null;
-		// ResultSet rs = null;
+		
 		JSONArray jsonArray = new JSONArray();
 		JSONArray interactiveElements = new JSONArray();
 		JSONObject lecture = new JSONObject();
@@ -523,63 +481,6 @@ public class OpenAIServiceController {
 		organizational.put("description", "Organisatorisches");
 		organizational.put("isFile", false);
 		interactiveElements.add(organizational);
-
-		// for(int i=1 ; i <= 12; i++){
-		// 	JSONObject seminar  = new JSONObject();
-		// 	seminar.put("couseid", channel);
-		// 	seminar.put("material", "Seminar " + Integer.toString(i) + " Material");
-		// 	jsonArray.add(seminar);
-		// 	seminar.put("intent", "material seminar " + Integer.toString(i) + " material");
-		// 	seminar.put("label", "Seminar " + Integer.toString(i));
-		// 	seminar.put("description", "Seminar " + Integer.toString(i));
-		// 	seminar.put("isFile", false);
-		// 	interactiveElements.add(seminar);
-		// }
-
-		// try {
-		// 	conn = dataSource.getConnection();
-		// 	if (channel == 0) {
-		// 		stmt = conn.prepareStatement("SELECT * FROM materials;");
-		// 	} else {
-		// 		stmt = conn.prepareStatement("SELECT * FROM materials WHERE courseid = ?;");
-		// 		stmt.setInt(1, channel);
-		// 	}
-		// 	rs = stmt.executeQuery();
-
-		// 	while (rs.next()) {
-		// 		channel = rs.getInt("courseid");
-		// 		String material = rs.getString("material");
-
-		// 		JSONObject jsonObject = new JSONObject();
-		// 		jsonObject.put("courseId", channel);
-		// 		jsonObject.put("material", material);
-
-		// 		jsonArray.add(jsonObject);
-		// 		jsonObject = new JSONObject();
-		// 		jsonObject.put("intent", "material " + material);
-		// 		jsonObject.put("label", "material "+ material);
-		// 		jsonObject.put("description", "material "+ material);
-		// 		jsonObject.put("isFile", false);
-
-		// 		interactiveElements.add(jsonObject);
-		// 	}
-		// } catch (SQLException e) {
-			// 	e.printStackTrace();
-		// } finally {
-		// 	try {
-		// 		if (rs != null) {
-		// 			rs.close();
-		// 		}
-		// 		if (stmt != null) {
-		// 			stmt.close();
-		// 		}
-		// 		if (conn != null) {
-		// 			conn.close();
-		// 		}
-		// 	} catch (SQLException ex) {
-		// 		System.out.println(ex.getMessage());
-		// 	}
-		// }
 
 		JSONObject response = new JSONObject();
 		response.put("data", jsonArray);
