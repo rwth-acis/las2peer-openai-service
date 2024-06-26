@@ -32,3 +32,6 @@ kubernetes
 # Ignore Gradle build output directory
 build
 .vscode
+
+openai-service/src/main/resources/*.properties
+application.properties
