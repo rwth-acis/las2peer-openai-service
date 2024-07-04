@@ -11,7 +11,7 @@ import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.servers.Server;
 
 @Configuration
-public class OpenAIServiceConfig {
+public class OpenApiConfig {
 
     @Bean
     public OpenAPI openAIServiceconfig() {
@@ -19,15 +19,16 @@ public class OpenAIServiceConfig {
         sv.setUrl("http://localhost:8080");
         sv.setDescription("Development environment URL");
         Contact contact = new Contact();
-        contact.setEmail("yue.yin@rwth-aachen.de, samuel.kwong@rwth-aachen.de");
-        contact.setName("Yue Yin, Samuel Kwong");
+        contact.email("yue.yin@rwth-aachen.de, samuel.kwong@rwth-aachen.de");
+        contact.name("Yue Yin, Samuel Kwong");
         License lis = new License().name("CC0").url("https://github.com/rwth-acis/las2peer-openai-service/blob/main/LICENSE");
         Info info = new Info()
             .title("OpenAI Service")
             .version("2.0.0")
             .contact(contact)
             .description("A service to make request to OpenAI API functions and connect to the other services utilizing OpenAPI services.").termsOfService("https://www.bezkoder.com/terms")
-            .license(lis);
+            .license(lis)
+            .termsOfService("https://tech4comp.de/");
         return new OpenAPI().info(info).servers(List.of(sv));
     }
 }

@@ -20,8 +20,9 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
-
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 // import org.apache.commons.dbcp2.BasicDataSource;
 
@@ -29,7 +30,6 @@ import com.knuddels.jtokkit.Encodings;
 import com.knuddels.jtokkit.api.Encoding;
 import com.knuddels.jtokkit.api.EncodingRegistry;
 import com.knuddels.jtokkit.api.EncodingType;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONObject;
@@ -249,6 +249,23 @@ public class OpenAIService {
 		costs.appendField("total_cost", cost);
 		
 		return costs;
+	}
+
+	@Value("${openai.api-docs.uri}")
+	private String openaiApiDocsUri;
+
+	public JSONObject getSwagger(){
+		JSONObject swagger = new JSONObject();
+		// JSONObject swagger = new JSONObject();
+		String uri = openaiApiDocsUri + "/openai/v3/api-docs";
+		RestTemplate restTemplate = new RestTemplate();
+		JSONObject result = restTemplate.getForObject(uri, JSONObject.class);
+		
+		swagger.appendField("swagger", "2.0");
+		swagger.appendField("info", result.get("info"));
+		swagger.appendField("basePath", "/openai");
+		swagger.appendField("paths", result.get("paths"));
+		return swagger;
 	}
 
 }

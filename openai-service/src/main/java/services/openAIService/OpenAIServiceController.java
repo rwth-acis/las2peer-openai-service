@@ -1,6 +1,7 @@
 package services.openAIService;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -9,9 +10,13 @@ import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +26,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import org.springframework.web.bind.annotation.RequestBody;
 
+import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -35,12 +44,18 @@ import net.minidev.json.parser.JSONParser;
 
 @Tag(name = "OpenAIService", description = "A service to make request to OpenAI API functions and connect to the Biwibot service.")
 @RestController
-@RequestMapping("/openai")
+@RequestMapping("/")
 public class OpenAIServiceController {
 
 	@Autowired
 	OpenAIService openAIservice;
 
+	@GetMapping("/swagger.json")
+	public ResponseEntity<JSONObject> getSwagger() {
+		JSONObject swaggerJson = openAIservice.getSwagger();
+		return ResponseEntity.ok(swaggerJson);
+	}
+	
 	@Operation(tags = {"test"}, summary = "Returns success if it works.")
 	@ApiResponses({ 
 		@ApiResponse(responseCode = "200", description = "Success"), 
