@@ -34,4 +34,5 @@ build
 .vscode
 
 openai-service/src/main/resources/*.properties
+openai-service/bin
 application.properties
