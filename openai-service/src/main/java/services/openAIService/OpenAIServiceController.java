@@ -529,7 +529,7 @@ public class OpenAIServiceController {
 
 	@Operation(tags = {"biwibot"}, description = "Returns the chat response from biwibot.")
 	@ApiResponses({ 
-		@ApiResponse(responseCode = "200" , description = "Get the chat response from biwibot.",content = {@Content(mediaType = "application/json")} ),
+		@ApiResponse(responseCode = "200" , description = "Get the chat response from biwibot."),
 		@ApiResponse(responseCode = "500", description = "Getting response failed.") 
 	})
 	@PostMapping("/biwibot")
