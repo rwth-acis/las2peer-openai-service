@@ -19,6 +19,7 @@ import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,6 +38,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.UriBuilder;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
@@ -510,7 +512,7 @@ public class OpenAIServiceController {
 		@ApiResponse(responseCode = "200" , description = "Sets the selected materials and respond with set.",content = {@Content(mediaType = "application/json")} ),
 		@ApiResponse(responseCode = "500", description = "Setting materials failed.") 
 	})
-	@PostMapping("/setBiwibotMaterials")
+	@PostMapping(value = "/setBiwibotMaterials", consumes = MediaType.ALL_VALUE)
 	public ResponseEntity<JSONObject> setBiwibotMaterials(@RequestBody Object body, @RequestParam(value = "channel", defaultValue = "") String channel) throws ParseException {
 		JSONParser parser = new JSONParser();
 		JSONObject request = new JSONObject();
@@ -536,14 +538,15 @@ public class OpenAIServiceController {
 		@ApiResponse(responseCode = "200" , description = "Get the chat response from biwibot."),
 		@ApiResponse(responseCode = "500", description = "Getting response failed.") 
 	})
-	@PostMapping("/biwibot")
-	public ResponseEntity<JSONObject> biwibot(@RequestBody Object body, @RequestParam(value = "msg", defaultValue = "") String msg, @RequestParam("channel") String channel, @RequestParam(value="sbfmUrl", defaultValue = "default") String sbfmUrl, @RequestParam(value = "material", defaultValue = "default") String material) throws IOException, InterruptedException, ParseException {
+	@PostMapping(value = "/biwibot", consumes = MediaType.ALL_VALUE)
+	public ResponseEntity<JSONObject> biwibot(HttpServletRequest req, @RequestBody Object body, @RequestParam(value = "msg", defaultValue = "") String msg, @RequestParam("channel") String channel, @RequestParam(value="sbfmUrl", defaultValue = "default") String sbfmUrl, @RequestParam(value = "material", defaultValue = "default") String material) throws IOException, InterruptedException, ParseException {
 		JSONParser parser = new JSONParser();
+		String contentType = req.getContentType();
 		JSONObject request = new JSONObject();
 
-		if (body instanceof String) {
+		if (contentType != null && contentType.equals(MediaType.TEXT_PLAIN_VALUE)) {
 			request = (JSONObject) parser.parse((String) body);
-		} else if (body instanceof JSONObject) {
+		} else if (contentType != null && contentType.contains("application/json")) {
 			request = (JSONObject) body;
 		}
 
