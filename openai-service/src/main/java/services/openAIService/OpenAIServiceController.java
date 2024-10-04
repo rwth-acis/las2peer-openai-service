@@ -510,8 +510,13 @@ public class OpenAIServiceController {
 		@ApiResponse(responseCode = "500", description = "Setting materials failed.") 
 	})
 	@PostMapping("/setBiwibotMaterials")
-	public ResponseEntity<JSONObject> setBiwibotMaterials(@RequestParam("material") String material, @RequestParam("channel") String channel) {
+	public ResponseEntity<JSONObject> setBiwibotMaterials(@RequestBody JSONObject body, @RequestParam(value= "material", defaultValue = "") String material, @RequestParam(value = "channel", defaultValue = "") String channel) {
 		//Clear hashmap after some time?
+		if (material == null || material.equals("")) {
+			material = body.getAsString("material");
+			channel = body.getAsString("channel");
+		}
+
 		selectedMaterial.put(channel, material);
 		System.out.println("Selected Materials are: " + selectedMaterial.toString());
 		JSONObject response = new JSONObject();
@@ -528,8 +533,11 @@ public class OpenAIServiceController {
 		@ApiResponse(responseCode = "500", description = "Getting response failed.") 
 	})
 	@PostMapping("/biwibot")
-	public ResponseEntity<JSONObject> biwibot(@RequestParam("msg") String msg, @RequestParam("channel") String channel, @RequestParam(value="sbfmUrl", defaultValue = "default") String sbfmUrl, @RequestParam(value = "material", defaultValue = "default") String material) throws IOException, InterruptedException {
-		System.out.println("Msg:" + msg);
+	public ResponseEntity<JSONObject> biwibot(@RequestBody JSONObject body, @RequestParam(value = "msg", defaultValue = "") String msg, @RequestParam("channel") String channel, @RequestParam(value="sbfmUrl", defaultValue = "default") String sbfmUrl, @RequestParam(value = "material", defaultValue = "default") String material) throws IOException, InterruptedException {
+		if (msg == null || msg.equals("")) {
+			msg = body.getAsString("msg");
+		}
+		System.out.println("Msg:" + body.getAsString("msg"));
 		System.out.println("Channel:" + channel);
 		System.out.println("Material:" + material);
 		Boolean contextOn = false;
