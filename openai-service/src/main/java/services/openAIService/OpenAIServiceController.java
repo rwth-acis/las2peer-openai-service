@@ -636,6 +636,13 @@ public class OpenAIServiceController {
 							.build();
 					// Send the request
 					HttpResponse<String> respond = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+
+					try {
+						Thread.sleep(2500);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+
 					int responseCode = respond.statusCode();
 					if (responseCode == HttpURLConnection.HTTP_OK) {
 						System.out.println("Response from service: " + respond.body());
