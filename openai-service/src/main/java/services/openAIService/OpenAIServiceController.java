@@ -638,7 +638,8 @@ public class OpenAIServiceController {
 					HttpResponse<String> respond = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
 					try {
-						Thread.sleep(2500);
+						System.out.println("Waiting for response...");
+						Thread.sleep(5000);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
