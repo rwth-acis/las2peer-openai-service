@@ -539,7 +539,7 @@ public class OpenAIServiceController {
 		@ApiResponse(responseCode = "500", description = "Getting response failed.") 
 	})
 	@PostMapping(value = "/biwibot", consumes = MediaType.ALL_VALUE)
-	public ResponseEntity<JSONObject> biwibot(HttpServletRequest req, @RequestBody Object body, @RequestParam(value = "msg", defaultValue = "") String msg, @RequestParam("channel") String channel, @RequestParam(value="sbfmUrl", defaultValue = "default") String sbfmUrl, @RequestParam(value = "material", defaultValue = "default") String material) throws IOException, InterruptedException, ParseException {
+	public ResponseEntity<JSONObject> biwibot(HttpServletRequest req, @RequestBody Object body) throws IOException, InterruptedException, ParseException {
 		JSONParser parser = new JSONParser();
 		String contentType = req.getContentType();
 		JSONObject request = new JSONObject();
@@ -549,15 +549,17 @@ public class OpenAIServiceController {
 		} else if (contentType != null && contentType.contains("application/json")) {
 			request = (JSONObject) body;
 		}
+		System.out.println(request);
 
-		if (msg == null || msg.equals("")) {
-			msg = request.getAsString("msg");
-		}
+		String msg = request.getAsString("msg");
+		String channel = request.getAsString("channel");
+		String material = request.getAsString("material");
+		String sbfmUrl = request.getAsString("sbfmUrl");
 		System.out.println("Msg:" + request.getAsString("msg"));
-		System.out.println("Channel:" + channel);
-		System.out.println("Material:" + material);
+		System.out.println("Channel:" + request.getAsString("channel"));
+		System.out.println("Material:" + request.getAsString("material"));
 		Boolean contextOn = false;
-		Boolean contextOff = true;
+		Boolean contextOff = !contextOn;
 		JSONObject chatResponse = new JSONObject();
 		JSONObject newEvent = new JSONObject();
 		String question = null;
