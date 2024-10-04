@@ -554,7 +554,7 @@ public class OpenAIServiceController {
 			newEvent.put("material", "None");
 		}
 		if (body.containsKey("sbfmUrl")) {
-			final String sbfmUrl = body.getAsString("sbfmUrl");
+			final String sbfmUrl = body.getAsString("sbfmUrl") + "/" + channel.split("-")[0] + "/" + channel;
 			if (openAIservice.isActive.containsKey(orgaChannel)) {
 				if(openAIservice.isActive.getOrDefault(orgaChannel, false) && !msg.startsWith("!")) {
 					openAIservice.response.put("AIResponse", "Einen Moment bitte, ich verarbeite noch deine erste Nachricht.");
