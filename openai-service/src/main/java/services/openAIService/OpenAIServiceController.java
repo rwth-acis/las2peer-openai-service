@@ -1,7 +1,6 @@
 package services.openAIService;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -10,29 +9,24 @@ import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javax.ws.rs.InternalServerErrorException;
-import javax.ws.rs.NotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-
+import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.springframework.web.bind.annotation.RequestBody;
 
-import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -538,26 +532,13 @@ public class OpenAIServiceController {
 		@ApiResponse(responseCode = "200" , description = "Get the chat response from biwibot."),
 		@ApiResponse(responseCode = "500", description = "Getting response failed.") 
 	})
-	@PostMapping(value = "/biwibot", consumes = MediaType.ALL_VALUE)
-	public ResponseEntity<JSONObject> biwibot(HttpServletRequest req, @RequestBody Object body) throws IOException, InterruptedException, ParseException {
-		JSONParser parser = new JSONParser();
-		String contentType = req.getContentType();
-		JSONObject request = new JSONObject();
+	@PostMapping(value = "/biwibot")
+	public ResponseEntity<JSONObject> biwibot(HttpServletRequest req, @RequestBody JSONObject body) throws IOException, InterruptedException, ParseException {
 
-		if (contentType != null && contentType.equals(MediaType.TEXT_PLAIN_VALUE)) {
-			request = (JSONObject) parser.parse((String) body);
-		} else if (contentType != null && contentType.contains("application/json")) {
-			request = (JSONObject) body;
-		}
-		System.out.println(request);
+		String msg = body.getAsString("msg");
+		String channel = body.getAsString("channel");
+		String material = body.getAsString("material");
 
-		String msg = request.getAsString("msg");
-		String channel = request.getAsString("channel");
-		String material = request.getAsString("material");
-		String sbfmUrl = request.getAsString("sbfmUrl");
-		System.out.println("Msg:" + request.getAsString("msg"));
-		System.out.println("Channel:" + request.getAsString("channel"));
-		System.out.println("Material:" + request.getAsString("material"));
 		Boolean contextOn = false;
 		Boolean contextOff = !contextOn;
 		JSONObject chatResponse = new JSONObject();
@@ -572,7 +553,8 @@ public class OpenAIServiceController {
 		} else {
 			newEvent.put("material", "None");
 		}
-		if (!sbfmUrl.equals("default")) {
+		if (body.containsKey("sbfmUrl")) {
+			final String sbfmUrl = body.getAsString("sbfmUrl");
 			if (openAIservice.isActive.containsKey(orgaChannel)) {
 				if(openAIservice.isActive.getOrDefault(orgaChannel, false) && !msg.startsWith("!")) {
 					openAIservice.response.put("AIResponse", "Einen Moment bitte, ich verarbeite noch deine erste Nachricht.");
