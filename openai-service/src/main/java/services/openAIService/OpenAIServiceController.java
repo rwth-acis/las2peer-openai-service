@@ -41,6 +41,7 @@ import jakarta.ws.rs.core.UriBuilder;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
+import net.minidev.json.parser.ParseException;
 
 @Tag(name = "OpenAIService", description = "A service to make request to OpenAI API functions and connect to the Biwibot service.")
 @RestController
@@ -510,13 +511,16 @@ public class OpenAIServiceController {
 		@ApiResponse(responseCode = "500", description = "Setting materials failed.") 
 	})
 	@PostMapping("/setBiwibotMaterials")
-	public ResponseEntity<JSONObject> setBiwibotMaterials(@RequestBody JSONObject body, @RequestParam(value= "material", defaultValue = "") String material, @RequestParam(value = "channel", defaultValue = "") String channel) {
-		//Clear hashmap after some time?
-		if (material == null || material.equals("")) {
-			material = body.getAsString("material");
-			channel = body.getAsString("channel");
-		}
+	public ResponseEntity<JSONObject> setBiwibotMaterials(@RequestBody Object body, @RequestParam(value = "channel", defaultValue = "") String channel) throws ParseException {
+		JSONParser parser = new JSONParser();
+		JSONObject request = new JSONObject();
 
+		if (body instanceof String) {
+			request = (JSONObject) parser.parse((String) body);
+		} else if (body instanceof JSONObject) {
+			request = (JSONObject) body;
+		}
+		String material = request.getAsString("material");
 		selectedMaterial.put(channel, material);
 		System.out.println("Selected Materials are: " + selectedMaterial.toString());
 		JSONObject response = new JSONObject();
@@ -533,11 +537,20 @@ public class OpenAIServiceController {
 		@ApiResponse(responseCode = "500", description = "Getting response failed.") 
 	})
 	@PostMapping("/biwibot")
-	public ResponseEntity<JSONObject> biwibot(@RequestBody JSONObject body, @RequestParam(value = "msg", defaultValue = "") String msg, @RequestParam("channel") String channel, @RequestParam(value="sbfmUrl", defaultValue = "default") String sbfmUrl, @RequestParam(value = "material", defaultValue = "default") String material) throws IOException, InterruptedException {
-		if (msg == null || msg.equals("")) {
-			msg = body.getAsString("msg");
+	public ResponseEntity<JSONObject> biwibot(@RequestBody Object body, @RequestParam(value = "msg", defaultValue = "") String msg, @RequestParam("channel") String channel, @RequestParam(value="sbfmUrl", defaultValue = "default") String sbfmUrl, @RequestParam(value = "material", defaultValue = "default") String material) throws IOException, InterruptedException, ParseException {
+		JSONParser parser = new JSONParser();
+		JSONObject request = new JSONObject();
+
+		if (body instanceof String) {
+			request = (JSONObject) parser.parse((String) body);
+		} else if (body instanceof JSONObject) {
+			request = (JSONObject) body;
 		}
-		System.out.println("Msg:" + body.getAsString("msg"));
+
+		if (msg == null || msg.equals("")) {
+			msg = request.getAsString("msg");
+		}
+		System.out.println("Msg:" + request.getAsString("msg"));
 		System.out.println("Channel:" + channel);
 		System.out.println("Material:" + material);
 		Boolean contextOn = false;
